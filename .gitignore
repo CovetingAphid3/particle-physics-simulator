@@ -1,5 +1,6 @@
 todo.md
 # Go specific
+main
 tmp/
 # Ignore compiled binary files
 /bin/
