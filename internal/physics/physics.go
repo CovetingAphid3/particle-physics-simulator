@@ -39,3 +39,28 @@ func CheckCollision(p1, p2 *particle.Particle) bool {
     return distance < (p1.Radius + p2.Radius)
 }
 
+func HandleCollision(p1, p2 *particle.Particle) {
+    dx := p2.X - p1.X
+    dy := p2.Y - p1.Y
+    distance := math.Sqrt(dx*dx + dy*dy)
+
+    // Normal vector components
+    nx := dx / distance
+    ny := dy / distance
+
+    // Relative velocity
+    dvx := p1.Vx - p2.Vx
+    dvy := p1.Vy - p2.Vy
+
+    // Dot product of relative velocity and normal vector
+    dot := dvx*nx + dvy*ny
+
+    // Calculate the impulse scalar for elastic collision
+    impulse := 2 * dot / (p1.Mass + p2.Mass)
+
+    // Update velocities based on the impulse and normal vector
+    p1.Vx -= impulse * p2.Mass * nx
+    p1.Vy -= impulse * p2.Mass * ny
+    p2.Vx += impulse * p1.Mass * nx
+    p2.Vy += impulse * p1.Mass * ny
+}
