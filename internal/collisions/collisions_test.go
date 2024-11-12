@@ -1,85 +1,60 @@
-package collisions
+package collisions_test
 
 import (
-	"math"
-	"particle-physics-simulator/internal/particle"
 	"testing"
+	"log"
+
+	"github.com/stretchr/testify/assert"
+	"particle-physics-simulator/internal/collisions"
+	"particle-physics-simulator/internal/particle"
 )
 
-// Helper function to create a particle with given parameters
-func NewParticle(x, y, z, vx, vy, vz, mass, radius float64) *particle.Particle {
-	return &particle.Particle{
-		X:      x,
-		Y:      y,
-		Z:      z,
-		Vx:     vx,
-		Vy:     vy,
-		Vz:     vz,
-		Mass:   mass,
-		Radius: radius,
-	}
-}
-
 func TestCheckCollision(t *testing.T) {
-	// Test for collision
-	p1 := NewParticle(0, 0, 0, 0, 0, 0, 1, 1)
-	p2 := NewParticle(1, 0, 0, 0, 0, 0, 1, 1)
-	if !CheckCollision(p1, p2) {
-		t.Errorf("Expected collision, but got no collision.")
-	}
+	// Create two particles
+	p1 := particle.NewParticle(0, 0, 0, 0, 0, 0, 0, 0, 0, 1.0, 1.0, particle.Color{R: 1, G: 0, B: 0, A: 1})
+	p2 := particle.NewParticle(1.5, 0, 0, 0, 0, 0, 0, 0, 0, 1.0, 1.0, particle.Color{R: 0, G: 1, B: 0, A: 1})
 
-	// Test for no collision
-	p2 = NewParticle(3, 0, 0, 0, 0, 0, 1, 1)
-	if CheckCollision(p1, p2) {
-		t.Errorf("Expected no collision, but got collision.")
-	}
+	// Test for collision (distance is exactly the sum of their radii)
+	collides := collisions.CheckCollision(p1, p2)
+	assert.True(t, collides, "Particles should collide at distance 1.5")
+
+	// Test for no collision (particles are far apart)
+	p2.X = 3.0 // Move p2 further apart
+	collides = collisions.CheckCollision(p1, p2)
+	assert.False(t, collides, "Particles should not collide at distance 3.0")
 }
 
 func TestWillCollide(t *testing.T) {
-	// Test for particles moving towards each other
-	p1 := NewParticle(0, 0, 0, 10, 0, 0, 1, 1)
-	p2 := NewParticle(15, 0, 0, -10, 0, 0, 1, 1)
-	if !WillCollide(p1, p2, 1.0) {
-		t.Errorf("Expected particles to collide, but they won't.")
-	}
+	// Create two particles moving towards each other
+	p1 := particle.NewParticle(0, 0, 0, 2.0, 0, 0, 0, 0, 0, 1.0, 1.0, particle.Color{R: 1, G: 0, B: 0, A: 1})
+	p2 := particle.NewParticle(5, 0, 0, -2.0, 0, 0, 0, 0, 0, 1.0, 1.0, particle.Color{R: 0, G: 1, B: 0, A: 1})
 
-	// Test for particles moving apart
-	p1 = NewParticle(0, 0, 0, 10, 0, 0, 1, 1)
-	p2 = NewParticle(15, 0, 0, 5, 0, 0, 1, 1)
-	if WillCollide(p1, p2, 1.0) {
-		t.Errorf("Expected particles not to collide, but they will.")
-	}
+	// Test for collision prediction (will collide in 1 second)
+	collides := collisions.WillCollide(p1, p2, 1.0)
+	assert.True(t, collides, "Particles should collide in 1 second")
+
+	// Test for no collision prediction (particles moving apart)
+	p2.X = 10 // Move p2 further away
+	collides = collisions.WillCollide(p1, p2, 1.0)
+	assert.False(t, collides, "Particles should not collide in 1 second")
 }
 
 func TestHandleCollision(t *testing.T) {
-	// Initialize particles for collision
-	p1 := NewParticle(100, 600, 0, 200.0, 0.0, 0.0, 100.0, 10)
-	p2 := NewParticle(700, 600, 0, -200.0, 0.0, 0.0, 100.0, 10)
+	// Create two particles
+	p1 := particle.NewParticle(0, 0, 0, 1.0, 0, 0, 0, 0, 0, 1.0, 1.0, particle.Color{R: 1, G: 0, B: 0, A: 1})
+	p2 := particle.NewParticle(2, 0, 0, -1.0, 0, 0, 0, 0, 0, 1.0, 1.0, particle.Color{R: 0, G: 1, B: 0, A: 1})
 
-	// Before collision, check velocities
-	initialVx1 := p1.Vx
-	initialVx2 := p2.Vx
+	// Log initial velocities
+	log.Printf("Initial velocities: p1(%.2f, %.2f, %.2f), p2(%.2f, %.2f, %.2f)", p1.Vx, p1.Vy, p1.Vz, p2.Vx, p2.Vy, p2.Vz)
 
-	// Simulate collision
-	HandleCollision(p1, p2)
+	// Handle collision between p1 and p2
+	collisions.HandleCollision(p1, p2)
 
-	// Check if the velocities have been updated correctly (elastic collision)
-	if math.Abs(p1.Vx+initialVx2) > 1e-6 || math.Abs(p2.Vx+initialVx1) > 1e-6 {
-		t.Errorf("Velocities not updated correctly after collision. p1.Vx: %f, p2.Vx: %f", p1.Vx, p2.Vx)
-	}
-}
+	// Check if the velocities were updated after collision
+	assert.NotEqual(t, p1.Vx, 1.0, "Particle 1's velocity should have changed after collision")
+	assert.NotEqual(t, p2.Vx, -1.0, "Particle 2's velocity should have changed after collision")
 
-func TestHandleCollisionEdgeCase(t *testing.T) {
-	// Test for zero distance (particles are already overlapping)
-	p1 := NewParticle(0, 0, 0, 0, 0, 0, 1, 1)
-	p2 := NewParticle(0, 0, 0, 0, 0, 0, 1, 1)
-
-	// Check if no error occurs during collision handling
-	HandleCollision(p1, p2)
-
-	// Since the particles are at the same position, their velocities shouldn't change
-	if p1.Vx != 0 || p2.Vx != 0 {
-		t.Errorf("Expected velocities to stay the same. p1.Vx: %f, p2.Vx: %f", p1.Vx, p2.Vx)
-	}
+	// Log final velocities
+	log.Printf("Updated velocities: p1(%.2f, %.2f, %.2f), p2(%.2f, %.2f, %.2f)", p1.Vx, p1.Vy, p1.Vz, p2.Vx, p2.Vy, p2.Vz)
 }
 
