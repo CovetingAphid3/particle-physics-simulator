@@ -32,7 +32,7 @@ func (f *Force) Direction() (float64, float64, float64) {
 
 // ApplyForce directly updates the position of a particle based on the force components
 func ApplyForce(p *particle.Particle, f *Force) {
-	p.X += (f.Value * f.XComponent) / p.Mass
-	p.Y += (f.Value * f.YComponent) / p.Mass
+	p.Vx += (f.Value * f.XComponent) / p.Mass
+	p.Vy += (f.Value * f.YComponent) / p.Mass
 }
 
