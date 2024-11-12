@@ -6,7 +6,7 @@ import (
 	"particle-physics-simulator/internal/electrostatics"
 	"particle-physics-simulator/internal/constants"
 )
-
+const GravitationalConstant = 6.67430e-11 // m^3 kg^−1 s^−2
 // Force struct represents a force with its magnitude and components (in X, Y, Z directions).
 type Force struct {
     Value      float64
@@ -101,23 +101,40 @@ func CalculateGravitationalForce(p1, p2 *particle.Particle) float64 {
     return forceMagnitude
 }
 
-// ApplyGravitationalForce applies the gravitational force between two particles.
-func ApplyGravitationalForce(p1, p2 *particle.Particle) *Force {
-    // Calculate the force magnitude
-    forceMagnitude := CalculateGravitationalForce(p1, p2)
+// ApplyGravitationalForces calculates gravitational forces between all particles
+func ApplyGravitationalForces(particles []*particle.Particle) {
+    for i := 0; i < len(particles); i++ {
+        for j := i + 1; j < len(particles); j++ {
+            p1 := particles[i]
+            p2 := particles[j]
 
-    // Calculate the direction of the gravitational force
-    dx := p2.X - p1.X
-    dy := p2.Y - p1.Y
-    dz := p2.Z - p1.Z
-    distance := math.Sqrt(dx*dx + dy*dy + dz*dz)
+            // Calculate the distance between the two particles
+            dx := p2.X - p1.X
+            dy := p2.Y - p1.Y
+            dz := p2.Z - p1.Z
+            distance := math.Sqrt(dx*dx + dy*dy + dz*dz)
 
-    // Normalize the direction vector
-    normX := dx / distance
-    normY := dy / distance
-    normZ := dz / distance
+            // Skip if distance is zero (particles can't interact with themselves)
+            if distance == 0 {
+                continue
+            }
 
-    // Return the gravitational force as a new force object
-    return NewForce(forceMagnitude, normX, normY, normZ)
+            // Calculate the gravitational force magnitude
+            forceMagnitude := GravitationalConstant * p1.Mass * p2.Mass / (distance * distance)
+
+            // Calculate the unit vector direction of the force
+            forceX := forceMagnitude * dx / distance
+            forceY := forceMagnitude * dy / distance
+            forceZ := forceMagnitude * dz / distance
+
+            // Apply the force to both particles (action and reaction)
+            p1.Ax += forceX / p1.Mass
+            p1.Ay += forceY / p1.Mass
+            p1.Az += forceZ / p1.Mass
+
+            p2.Ax -= forceX / p2.Mass
+            p2.Ay -= forceY / p2.Mass
+            p2.Az -= forceZ / p2.Mass
+        }
+    }
 }
-
