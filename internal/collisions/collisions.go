@@ -31,9 +31,13 @@ func WillCollide(p1, p2 *particle.Particle, dt float64) bool {
 	dy := p1NextY - p2NextY
 	distSq := dx*dx + dy*dy
 
+	// Print the predicted positions and distance
+	fmt.Printf("Predicted positions: p1(%f, %f), p2(%f, %f), distance: %f\n", p1NextX, p1NextY, p2NextX, p2NextY, math.Sqrt(distSq))
+
 	// Check if the distance is less than the sum of their radii (i.e., a collision)
 	return distSq < (p1.Radius+p2.Radius)*(p1.Radius+p2.Radius)
 }
+
 
 func HandleCollision(p1, p2 *particle.Particle) {
 	dx := p1.X - p2.X
@@ -62,6 +66,7 @@ func HandleCollision(p1, p2 *particle.Particle) {
 
 	// Dot product of relative velocity and collision normal
 	dotProduct := vx*nx + vy*ny + vz*nz
+    fmt.Printf("Dot product: %f\n", dotProduct)
 
 	// Only proceed if particles are moving toward each other
 	if dotProduct > 0 {
