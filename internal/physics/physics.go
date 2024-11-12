@@ -4,6 +4,7 @@ package physics
 import (
 	"math"
 	"particle-physics-simulator/internal/electrostatics"
+	"particle-physics-simulator/internal/force"
 	"particle-physics-simulator/internal/particle"
 )
 const (
@@ -50,7 +51,7 @@ func UpdateVelocity(p *particle.Particle, dt float64) {
     // Apply air friction
     // ApplyAirFriction(p)
     // Apply gravity if not grounded
-    ApplyGravity(p)
+    // ApplyGravity(p)
 
     if !p.IsGrounded {
         p.Vx += p.Ax * dt
@@ -118,6 +119,18 @@ func ApplyBoundaryConditions(p *particle.Particle, screenWidth, screenHeight int
     if p.Y-p.Radius < 0 {
         p.Y = p.Radius
         p.Vy = -p.Vy * dampingFactor
+    }
+}
+// ApplyMagneticForces calculates the magnetic forces on all particles and updates their accelerations.
+func ApplyMagneticForces(particles []*particle.Particle, magneticFieldX, magneticFieldY, magneticFieldZ float64) {
+    for _, p := range particles {
+        // Calculate the magnetic force on the particle
+        forceX, forceY, _ := force.MagneticForce(p, magneticFieldX, magneticFieldY, magneticFieldZ)
+
+        // Apply the magnetic force to the particle's acceleration
+        p.Ax += forceX / p.Mass
+        p.Ay += forceY / p.Mass
+        // p.Az += forceZ / p.Mass
     }
 }
 // ApplyElectrostaticForces applies the electrostatic forces between particles.
