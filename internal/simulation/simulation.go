@@ -1,35 +1,40 @@
-// internal/simulation/simulation.go
 package simulation
 
 import (
-	"particle-physics-simulator/internal/collisions"
-	"particle-physics-simulator/internal/particle"
-	"particle-physics-simulator/internal/physics"
-	"particle-physics-simulator/internal/renderer"
-	"time"
+    "particle-physics-simulator/internal/collisions"
+    "particle-physics-simulator/internal/particle"
+    "particle-physics-simulator/internal/physics"
+    "particle-physics-simulator/internal/renderer"
+    "time"
 
-	"github.com/gen2brain/raylib-go/raylib"
+    "github.com/gen2brain/raylib-go/raylib"
 )
 
-const TimeStep = 1.0 / 60.0 // 60 FPS
+const TimeStep = 1.0 / 120.0 // 120 FPS
 
-// Run the simulation
+// Run the simulation with dynamic frame rate
 func RunSimulation(particles []*particle.Particle) {
     renderer.InitWindow()
     defer renderer.CloseWindow()
 
+    lastTime := time.Now()
+
     for !rl.WindowShouldClose() {
-        // Update particle physics
+        currentTime := time.Now()
+        dt := currentTime.Sub(lastTime).Seconds()  // Calculate time delta (in seconds)
+        lastTime = currentTime
+
+        // Update physics
         for _, p := range particles {
             physics.ApplyGravity(p)
-            physics.UpdateVelocity(p, TimeStep)
-            physics.UpdatePosition(p, TimeStep)
+            physics.UpdateVelocity(p, dt)
+            physics.UpdatePosition(p, dt)
         }
 
-        // Check for collisions using swept collision detection
+        // Check for collisions with swept collision detection
         for i := 0; i < len(particles); i++ {
             for j := i + 1; j < len(particles); j++ {
-                if collisions.WillCollide(particles[i], particles[j], TimeStep) {
+                if collisions.WillCollide(particles[i], particles[j], dt) {
                     collisions.HandleCollision(particles[i], particles[j])
                 }
             }
@@ -45,11 +50,12 @@ func RunSimulation(particles []*particle.Particle) {
 
         rl.EndDrawing()
 
-        time.Sleep(time.Millisecond * 16) // Simulate 60 FPS
+        // Sleep to simulate 120 FPS
+        time.Sleep(time.Millisecond * 8) // Simulate 120 FPS
     }
 }
 
-
 func RunSimulationSingle(p *particle.Particle) {
-	RunSimulation([]*particle.Particle{p})
+    RunSimulation([]*particle.Particle{p})
 }
+

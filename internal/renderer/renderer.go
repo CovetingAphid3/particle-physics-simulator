@@ -17,7 +17,7 @@ const (
 // Initialize the window
 func InitWindow() {
     rl.InitWindow(int32(screenWidth), int32(screenHeight), "Particle Physics Simulator")
-    rl.SetTargetFPS(60)
+    rl.SetTargetFPS(120)
 }
 
 // Draw particles on the screen
