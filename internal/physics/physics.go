@@ -9,6 +9,7 @@ const (
     Gravity           = 980.0  // Increased gravity (in pixels/second²)
     dampingFactor     = 0.7    // Reduced damping for more lively bounces
     velocityThreshold = 20.0   // Increased threshold for earlier stopping
+    frictionCoef = 0.1
 )
 
 
@@ -17,6 +18,22 @@ func ApplyGravity(p *particle.Particle) {
     // Only apply gravity if particle is not grounded
     if !p.IsGrounded {
         p.Ay = Gravity
+    }
+}
+// applyFriction applies friction to a particle on the ground
+func applyFriction(p *particle.Particle) {
+    if p.Vx > 0 {
+        // Apply friction force to the right-moving particle
+        p.Vx -= frictionCoef * p.Mass * Gravity / p.Mass
+        if p.Vx < 0 {
+            p.Vx = 0 // Stop particle if it reverses direction
+        }
+    } else if p.Vx < 0 {
+        // Apply friction force to the left-moving particle
+        p.Vx += frictionCoef * p.Mass * Gravity / p.Mass
+        if p.Vx > 0 {
+            p.Vx = 0 // Stop particle if it reverses direction
+        }
     }
 }
 
@@ -61,16 +78,16 @@ func ApplyBoundaryConditions(p *particle.Particle, screenWidth, screenHeight int
         p.X = p.Radius
         p.Vx = -p.Vx * dampingFactor
     }
-    
+
     // Bottom boundary (Ground level)
     groundY := float64(screenHeight - int(p.Radius))  // Ground level accounting for radius
-    
+
     if p.Y >= groundY {
         if !p.IsGrounded {
             // Bounce
             p.Y = groundY
             p.Vy = -p.Vy * dampingFactor
-            
+
             // Check if particle should stop
             if abs(p.Vy) < velocityThreshold {
                 p.IsGrounded = true
@@ -79,6 +96,9 @@ func ApplyBoundaryConditions(p *particle.Particle, screenWidth, screenHeight int
                 p.Y = groundY  // Lock to ground
             }
         } else {
+            // Apply friction when grounded
+            applyFriction(p)
+
             // Keep particle at ground level if grounded
             p.Y = groundY
             p.Vy = 0
@@ -88,13 +108,14 @@ func ApplyBoundaryConditions(p *particle.Particle, screenWidth, screenHeight int
         // If particle is above ground level, it's not grounded
         p.IsGrounded = false
     }
-    
+
     // Top boundary
     if p.Y-p.Radius < 0 {
         p.Y = p.Radius
         p.Vy = -p.Vy * dampingFactor
     }
 }
+
 
 // Helper function to calculate the absolute value of a float
 func abs(value float64) float64 {
