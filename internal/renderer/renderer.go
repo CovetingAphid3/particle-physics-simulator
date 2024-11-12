@@ -22,12 +22,20 @@ func InitWindow() {
 
 // Draw particles on the screen
 func DrawParticle(p *particle.Particle) {
-    // Draw the particle as a red circle
+    // Convert the particle color from float32 (0.0 to 1.0) to uint8 (0 to 255)
+    color := rl.Color{
+        R: uint8(p.Color.R * 255),
+        G: uint8(p.Color.G * 255),
+        B: uint8(p.Color.B * 255),
+        A: uint8(p.Color.A * 255),
+    }
+
+    // Draw the particle as a circle with the particle's color
     rl.DrawCircle(
-        int32(p.X), 
-        int32(p.Y), 
-        float32(p.Radius), 
-        rl.Color{R: 255, G: 0, B: 0, A: 255},
+        int32(p.X),
+        int32(p.Y),
+        float32(p.Radius),
+        color,
     )
 
     // Draw particle info slightly below the particle
@@ -38,6 +46,7 @@ func DrawParticle(p *particle.Particle) {
     // Apply boundary conditions to keep the particle within screen bounds
     physics.ApplyBoundaryConditions(p, screenWidth, screenHeight)
 }
+
 // Close the window
 func CloseWindow() {
     rl.CloseWindow()

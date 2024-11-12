@@ -38,3 +38,6 @@ func RunSimulation(particles []*particle.Particle) {
     }
 }
 
+func RunSimulationSingle(p *particle.Particle) {
+    RunSimulation([]*particle.Particle{p})
+}
