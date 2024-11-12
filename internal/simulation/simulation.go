@@ -31,12 +31,18 @@ func RunSimulation(particles []*particle.Particle) {
         if !paused {
             // Update physics if not paused
             for _, p := range particles {
-                physics.ApplyGravity(p)
+                // Apply gravity to each particle
+                // physics.ApplyGravity(p)
+
+                // Apply electrostatic forces between particles
+                physics.ApplyElectrostaticForces(particles)
+
+                // Update velocity and position based on applied forces
                 physics.UpdateVelocity(p, dt)
                 physics.UpdatePosition(p, dt)
             }
 
-            // Check for collisions
+            // Check for collisions between particles
             for i := 0; i < len(particles); i++ {
                 for j := i + 1; j < len(particles); j++ {
                     if collisions.WillCollide(particles[i], particles[j], dt) {
@@ -50,11 +56,12 @@ func RunSimulation(particles []*particle.Particle) {
         rl.BeginDrawing()
         rl.ClearBackground(rl.Black)
 
+        // Draw particles
         for _, p := range particles {
             renderer.DrawParticle(p)
         }
 
-        // renderer.DrawWindowButtons()
+        // Draw UI and particle info
         renderer.DrawUI(particles, paused)
         renderer.DrawParticleInfo(particles)
 

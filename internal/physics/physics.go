@@ -2,6 +2,8 @@
 package physics
 
 import (
+	"math"
+	"particle-physics-simulator/internal/electrostatics"
 	"particle-physics-simulator/internal/particle"
 )
 const (
@@ -45,13 +47,18 @@ func applyFriction(p *particle.Particle) {
 }
 
 func UpdateVelocity(p *particle.Particle, dt float64) {
-        // ApplyAirFriction(p)
+    // Apply air friction
+    // ApplyAirFriction(p)
+    // Apply gravity if not grounded
+    ApplyGravity(p)
+
     if !p.IsGrounded {
         p.Vx += p.Ax * dt
         p.Vy += p.Ay * dt
         p.Vz += p.Az * dt
     }
 }
+
 
 // UpdatePosition based on velocity
 func UpdatePosition(p *particle.Particle, dt float64) {
@@ -95,7 +102,7 @@ func ApplyBoundaryConditions(p *particle.Particle, screenWidth, screenHeight int
             }
         } else {
             // Apply friction when grounded
-            applyFriction(p)
+            // applyFriction(p)
 
             // Keep particle at ground level if grounded
             p.Y = groundY
@@ -111,6 +118,42 @@ func ApplyBoundaryConditions(p *particle.Particle, screenWidth, screenHeight int
     if p.Y-p.Radius < 0 {
         p.Y = p.Radius
         p.Vy = -p.Vy * dampingFactor
+    }
+}
+// ApplyElectrostaticForces applies the electrostatic forces between particles.
+func ApplyElectrostaticForces(particles []*particle.Particle) {
+    for i := range particles {
+        totalForceX := 0.0
+        totalForceY := 0.0
+        totalForceZ := 0.0
+
+        for j := range particles {
+            if i != j {
+                // Calculate electrostatic force between particles[i] and particles[j]
+                electrostaticForce := electrostatics.CalculateElectrostaticForce(particles[i], particles[j])
+
+                // Calculate direction of the electrostatic force
+                dx := particles[j].X - particles[i].X
+                dy := particles[j].Y - particles[i].Y
+                dz := particles[j].Z - particles[i].Z
+                distance := math.Sqrt(dx*dx + dy*dy + dz*dz)
+
+                // Normalize the direction vector
+                normX := dx / distance
+                normY := dy / distance
+                normZ := dz / distance
+
+                // Apply electrostatic force to X, Y, and Z components
+                totalForceX += electrostaticForce * normX
+                totalForceY += electrostaticForce * normY
+                totalForceZ += electrostaticForce * normZ
+            }
+        }
+
+        // Apply the resulting electrostatic force to the particle
+        particles[i].Fx = totalForceX
+        particles[i].Fy = totalForceY
+        particles[i].Fz = totalForceZ
     }
 }
 
