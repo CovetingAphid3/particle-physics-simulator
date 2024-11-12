@@ -1,10 +1,6 @@
 // internal/particle/particle.go
 package particle
 
-import (
-	"particle-physics-simulator/internal/force"
-)
-
 type Particle struct {
 	X, Y, Z    float64
 	Vx, Vy, Vz float64
@@ -31,7 +27,3 @@ func NewParticle(x, y, z, vx, vy, vz, ax, ay, az, mass, radius float64, color Co
 }
 
 
-func (p *Particle)ApplyForce(f *force.Force){
-    p.X += (f.Value * f.XDirection) / p.Mass
-    p.Y += (f.Value * f.YDirection) / p.Mass
-}

@@ -1,15 +1,38 @@
 package force
 
-type Force struct{
-    Value float64
-    XDirection float64
-    YDirection float64
+import (
+	"math"
+	"particle-physics-simulator/internal/particle"
+)
+
+type Force struct {
+    Value      float64
+    XComponent float64
+    YComponent float64
+    ZComponent float64
 }
 
-func NewForce(Value,xDirection,yDirection float64)*Force{
+func NewForce(value, xComponent, yComponent, zComponent float64) *Force {
     return &Force{
-        Value:Value,
-        XDirection:xDirection,
-        YDirection:yDirection,
+        Value:      value,
+        XComponent: xComponent,
+        YComponent: yComponent,
+        ZComponent: zComponent,
     }
 }
+
+func (f *Force) Magnitude() float64 {
+    return math.Sqrt(f.XComponent*f.XComponent + f.YComponent*f.YComponent + f.ZComponent*f.ZComponent)
+}
+
+func (f *Force) Direction() (float64, float64, float64) {
+    mag := f.Magnitude()
+    return f.XComponent / mag, f.YComponent / mag, f.ZComponent / mag
+}
+
+// ApplyForce directly updates the position of a particle based on the force components
+func ApplyForce(p *particle.Particle, f *Force) {
+	p.X += (f.Value * f.XComponent) / p.Mass
+	p.Y += (f.Value * f.YComponent) / p.Mass
+}
+
