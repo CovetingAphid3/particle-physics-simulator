@@ -1,32 +1,31 @@
-// cmd/main.go
 package main
 
 import (
-	"particle-physics-simulator/internal/force"
+	// "particle-physics-simulator/internal/force"
 	"particle-physics-simulator/internal/particle"
 	"particle-physics-simulator/internal/simulation"
 )
 
 func main() {
-	// Create some test particles
-	color := particle.Color{R: 1, G: 0, B: 0, A: 1}
-	p := particle.NewParticle(200, 0.0, 10, 10, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 10, color)
+	// Create particles with initial positions on opposite sides of the screen
+	color1 := particle.Color{R: 1, G: 0, B: 0, A: 1}
+	color2 := particle.Color{R: 0, G: 1, B: 0, A: 1}
 
-	p2 := particle.NewParticle(0.0, 0.0, 10, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 10, color)
+	// Particle 1, starting on the left side, moving right
+	p1 := particle.NewParticle(100, 600, 0, 500.0, 0.0, 0.0, 0.0, 0.0, 0.0, 100.0, 10, color1)
 
-	f := force.NewForce(10.0, 1.0, 0.0)
+	// Particle 2, starting on the right side, moving left
+	p2 := particle.NewParticle(700, 600, 0, -500.0, 0.0, 0.0, 0.0, 0.0, 0.0, 100.0, 10, color2)
 
-	// Apply the force to the particle
-	p.ApplyForce(f)
-	//
-	particles := []*particle.Particle{
-	    {X: 0, Y: 500, Radius: 10, Mass: 1, Color: particle.Color{R: 1, G: 0, B: 0, A: 1}},
-	    {X: 300, Y: 200, Radius: 10, Mass: 1, Color: particle.Color{R: 0, G: 1, B: 0, A: 1}},
-	}
-	particles2 := []*particle.Particle{p, p2}
+	// Optional: Apply a force in the X direction to ensure they cross paths
+	// f1 := force.NewForce(500.0, 0.0, -100.0)
+	// f2 := force.NewForce(-50.0, 0.0, 0.0)
+	// p1.ApplyForce(f1)
+	// p2.ApplyForce(f2)
 
-	// Run the simulation
-	// simulation.RunSimulationSingle(p2)
-    simulation.RunSimulation(particles2)
-    simulation.RunSimulation(particles)
+	// Add particles to the simulation
+	particles := []*particle.Particle{p1, p2}
+
+	// Run the simulation with these two particles
+	simulation.RunSimulation(particles)
 }

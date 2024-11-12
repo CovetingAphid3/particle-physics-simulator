@@ -32,6 +32,6 @@ func NewParticle(x, y, z, vx, vy, vz, ax, ay, az, mass, radius float64, color Co
 
 
 func (p *Particle)ApplyForce(f *force.Force){
-    p.Ax += (f.Value * f.XDirection) / p.Mass
-    p.Ay += (f.Value * f.YDirection) / p.Mass
+    p.X += (f.Value * f.XDirection) / p.Mass
+    p.Y += (f.Value * f.YDirection) / p.Mass
 }

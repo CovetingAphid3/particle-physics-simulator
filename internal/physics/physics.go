@@ -1,17 +1,20 @@
+// internal/physics/physics.go
 package physics
 
 import (
-    "math"
-    "particle-physics-simulator/internal/particle"
+	"fmt"
+	"math"
+	"particle-physics-simulator/internal/particle"
 )
 
 const (
     Gravity           = 980.0  // Increased gravity (in pixels/second²)
     dampingFactor     = 0.7    // Reduced damping for more lively bounces
     velocityThreshold = 20.0   // Increased threshold for earlier stopping
-    frictionCoef = 0.1
+    frictionCoef      = 0.05   // Reduced friction coefficient
     airFrictionCoefficient = 0.05
 )
+
 
 
 // ApplyGravity force to a particle
@@ -27,6 +30,7 @@ func ApplyAirFriction(p *particle.Particle) {
     p.Vy -= p.Vy * airFrictionCoefficient
     p.Vz -= p.Vz * airFrictionCoefficient
 }
+
 
 // applyFriction applies friction to a particle on the ground
 func applyFriction(p *particle.Particle) {
@@ -46,7 +50,7 @@ func applyFriction(p *particle.Particle) {
 }
 
 func UpdateVelocity(p *particle.Particle, dt float64) {
-        ApplyAirFriction(p)
+        // ApplyAirFriction(p)
     if !p.IsGrounded {
         p.Vx += p.Ax * dt
         p.Vy += p.Ay * dt
@@ -65,14 +69,16 @@ func UpdatePosition(p *particle.Particle, dt float64) {
     p.Z += p.Vz * scaledDt
 }
 func CheckCollision(p1, p2 *particle.Particle) bool {
-	// Calculate distance between the two particles
-	dx := p1.X - p2.X
-	dy := p1.Y - p2.Y
-	dz := p1.Z - p2.Z
-	distance := math.Sqrt(dx*dx + dy*dy + dz*dz)
-
-	// If distance is smaller than the sum of radii, a collision happens
-	return distance < (p1.Radius + p2.Radius)
+    dx := p1.X - p2.X
+    dy := p1.Y - p2.Y
+    dz := p1.Z - p2.Z
+    distance := math.Sqrt(dx*dx + dy*dy + dz*dz)
+    
+    if distance < (p1.Radius + p2.Radius) {
+        fmt.Printf("Collision detected between particles at distance: %f\n", distance)
+        return true
+    }
+    return false
 }
 
 // ApplyBoundaryConditions applies boundary conditions for window edges and ground level
@@ -106,7 +112,7 @@ func ApplyBoundaryConditions(p *particle.Particle, screenWidth, screenHeight int
             }
         } else {
             // Apply friction when grounded
-            applyFriction(p)
+            // applyFriction(p)
 
             // Keep particle at ground level if grounded
             p.Y = groundY
