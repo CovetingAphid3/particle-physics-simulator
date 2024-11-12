@@ -2,11 +2,8 @@
 package physics
 
 import (
-	"fmt"
-	"math"
 	"particle-physics-simulator/internal/particle"
 )
-
 const (
     Gravity           = 980.0  // Increased gravity (in pixels/second²)
     dampingFactor     = 0.7    // Reduced damping for more lively bounces
@@ -14,8 +11,6 @@ const (
     frictionCoef      = 0.05   // Reduced friction coefficient
     airFrictionCoefficient = 0.05
 )
-
-
 
 // ApplyGravity force to a particle
 func ApplyGravity(p *particle.Particle) {
@@ -67,18 +62,6 @@ func UpdatePosition(p *particle.Particle, dt float64) {
         p.Y += p.Vy * scaledDt
     }
     p.Z += p.Vz * scaledDt
-}
-func CheckCollision(p1, p2 *particle.Particle) bool {
-    dx := p1.X - p2.X
-    dy := p1.Y - p2.Y
-    dz := p1.Z - p2.Z
-    distance := math.Sqrt(dx*dx + dy*dy + dz*dz)
-    
-    if distance < (p1.Radius + p2.Radius) {
-        fmt.Printf("Collision detected between particles at distance: %f\n", distance)
-        return true
-    }
-    return false
 }
 
 // ApplyBoundaryConditions applies boundary conditions for window edges and ground level
