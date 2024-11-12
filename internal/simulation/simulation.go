@@ -12,50 +12,56 @@ import (
 
 const TimeStep = 1.0 / 120.0 // 120 FPS
 
-// Run the simulation with dynamic frame rate
+// RunSimulation starts the simulation with user interaction.
 func RunSimulation(particles []*particle.Particle) {
     renderer.InitWindow()
     defer renderer.CloseWindow()
 
     lastTime := time.Now()
+    paused := false
 
     for !rl.WindowShouldClose() {
         currentTime := time.Now()
-        dt := currentTime.Sub(lastTime).Seconds()  // Calculate time delta (in seconds)
+        dt := currentTime.Sub(lastTime).Seconds()
         lastTime = currentTime
 
-        // Update physics
-        for _, p := range particles {
-            physics.ApplyGravity(p)
-            physics.UpdateVelocity(p, dt)
-            physics.UpdatePosition(p, dt)
-        }
+        // Handle user input (pause, add/remove particles)
+        HandleUserInput(&particles, &paused)
 
-        // Check for collisions with swept collision detection
-        for i := 0; i < len(particles); i++ {
-            for j := i + 1; j < len(particles); j++ {
-                if collisions.WillCollide(particles[i], particles[j], dt) {
-                    collisions.HandleCollision(particles[i], particles[j])
+        if !paused {
+            // Update physics if not paused
+            for _, p := range particles {
+                physics.ApplyGravity(p)
+                physics.UpdateVelocity(p, dt)
+                physics.UpdatePosition(p, dt)
+            }
+
+            // Check for collisions
+            for i := 0; i < len(particles); i++ {
+                for j := i + 1; j < len(particles); j++ {
+                    if collisions.WillCollide(particles[i], particles[j], dt) {
+                        collisions.HandleCollision(particles[i], particles[j])
+                    }
                 }
             }
         }
 
-        // Render particles
+        // Render particles and UI
         rl.BeginDrawing()
-        rl.ClearBackground(rl.RayWhite)
+        rl.ClearBackground(rl.Black)
 
         for _, p := range particles {
             renderer.DrawParticle(p)
         }
 
+        renderer.DrawWindowButtons()
+        renderer.DrawUI(particles, paused)
+        renderer.DrawParticleInfo(particles)
+
         rl.EndDrawing()
 
         // Sleep to simulate 120 FPS
-        time.Sleep(time.Millisecond * 8) // Simulate 120 FPS
+        time.Sleep(time.Millisecond * 8)
     }
-}
-
-func RunSimulationSingle(p *particle.Particle) {
-    RunSimulation([]*particle.Particle{p})
 }
 
