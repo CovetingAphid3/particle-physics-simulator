@@ -49,9 +49,32 @@ func applyFriction(p *particle.Particle) {
 
 func UpdateVelocity(p *particle.Particle, dt float64) {
     // Apply air friction
+    //
+
+
+
+
     // ApplyAirFriction(p)
+
+
+
+
+
+
+
+
     // Apply gravity if not grounded
     // ApplyGravity(p)
+
+
+
+
+
+
+
+
+
+
 
     if !p.IsGrounded {
         p.Vx += p.Ax * dt
