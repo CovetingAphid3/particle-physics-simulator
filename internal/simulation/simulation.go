@@ -54,7 +54,7 @@ func RunSimulation(particles []*particle.Particle) {
             renderer.DrawParticle(p)
         }
 
-        renderer.DrawWindowButtons()
+        // renderer.DrawWindowButtons()
         renderer.DrawUI(particles, paused)
         renderer.DrawParticleInfo(particles)
 

@@ -70,7 +70,8 @@ func DrawUI(particles []*particle.Particle, paused bool) {
 
 	// Display instructions for controls
 	instructions := "Controls: [Space] Pause/Resume | [Left Click] Add Particle | [Right Click] Remove Particle"
-	rl.DrawText(instructions, 10, int32(rl.GetScreenHeight()-20), 15, rl.Gray)
+    h:=rl.GetScreenHeight() - rl.GetScreenHeight() + 80
+	rl.DrawText(instructions, 10, int32(h), 15, rl.Gray)
 }
 
 func CloseWindow() {
