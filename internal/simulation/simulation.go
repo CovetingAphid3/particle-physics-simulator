@@ -38,14 +38,12 @@ func RunSimulation(particles []*particle.Particle) {
         if !paused {
             // Update physics if not paused
             for _, p := range particles {
-                // Apply gravity to each particle (optional)
-                // physics.ApplyGravity(p)
 
                 // Apply electrostatic forces between particles
                 physics.ApplyElectrostaticForces(particles)
 
                 // Apply magnetic forces between particles
-                // physics.ApplyMagneticForces(particles, MagneticFieldX, MagneticFieldY, MagneticFieldZ)
+                physics.ApplyMagneticForces(particles, MagneticFieldX, MagneticFieldY, MagneticFieldZ)
 
                 // Update velocity and position based on applied forces
                 physics.UpdateVelocity(p, dt)
