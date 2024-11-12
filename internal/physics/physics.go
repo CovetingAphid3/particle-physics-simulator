@@ -10,6 +10,7 @@ const (
     dampingFactor     = 0.7    // Reduced damping for more lively bounces
     velocityThreshold = 20.0   // Increased threshold for earlier stopping
     frictionCoef = 0.1
+    airFrictionCoefficient = 0.05
 )
 
 
@@ -20,6 +21,13 @@ func ApplyGravity(p *particle.Particle) {
         p.Ay = Gravity
     }
 }
+func ApplyAirFriction(p *particle.Particle) {
+    // Apply air friction in the opposite direction of velocity
+    p.Vx -= p.Vx * airFrictionCoefficient
+    p.Vy -= p.Vy * airFrictionCoefficient
+    p.Vz -= p.Vz * airFrictionCoefficient
+}
+
 // applyFriction applies friction to a particle on the ground
 func applyFriction(p *particle.Particle) {
     if p.Vx > 0 {
@@ -38,6 +46,7 @@ func applyFriction(p *particle.Particle) {
 }
 
 func UpdateVelocity(p *particle.Particle, dt float64) {
+        ApplyAirFriction(p)
     if !p.IsGrounded {
         p.Vx += p.Ax * dt
         p.Vy += p.Ay * dt
