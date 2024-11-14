@@ -12,7 +12,7 @@ const (
     dampingFactor     = 0.7    // Reduced damping for more lively bounces
     velocityThreshold = 20.0   // Increased threshold for earlier stopping
     frictionCoef      = 0.0001   // Reduced friction coefficient
-    airFrictionCoefficient = 0.05
+    airFrictionCoefficient = 0.00009
 )
 
 // ApplyGravity force to a particle
@@ -54,7 +54,7 @@ func UpdateVelocity(p *particle.Particle, dt float64) {
 
 
 
-    // ApplyAirFriction(p)
+    ApplyAirFriction(p)
 
 
 
@@ -64,7 +64,7 @@ func UpdateVelocity(p *particle.Particle, dt float64) {
 
 
     // Apply gravity if not grounded
-    // ApplyGravity(p)
+    ApplyGravity(p)
 
 
 
@@ -126,7 +126,7 @@ func ApplyBoundaryConditions(p *particle.Particle, screenWidth, screenHeight int
             }
         } else {
             // Apply friction when grounded
-            // applyFriction(p)
+            applyFriction(p)
 
             // Keep particle at ground level if grounded
             p.Y = groundY

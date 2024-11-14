@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	screenWidth   int     = 1600
-	screenHeight  int     = 1000
+	screenWidth   int     = 800
+	screenHeight  int     = 600
 	groundLevel   float64 = 580
 	dampingFactor float64 = 0.9
 	buttonSize    int     = 20 // Button size for window control buttons

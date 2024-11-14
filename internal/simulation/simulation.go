@@ -40,10 +40,10 @@ func RunSimulation(particles []*particle.Particle) {
             for _, p := range particles {
 
                 // Apply electrostatic forces between particles
-                physics.ApplyElectrostaticForces(particles)
-
-                // Apply magnetic forces between particles
-                physics.ApplyMagneticForces(particles, MagneticFieldX, MagneticFieldY, MagneticFieldZ)
+                // physics.ApplyElectrostaticForces(particles)
+                //
+                // // Apply magnetic forces between particles
+                // physics.ApplyMagneticForces(particles, MagneticFieldX, MagneticFieldY, MagneticFieldZ)
 
                 // Update velocity and position based on applied forces
                 physics.UpdateVelocity(p, dt)
