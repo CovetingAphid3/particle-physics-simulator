@@ -11,13 +11,14 @@ type Particle struct {
 	IsGrounded bool
 	Charge     float64
 	Fx, Fy, Fz float64
+    Movable bool
 }
 
 type Color struct {
 	R, G, B, A float32
 }
 
-func NewParticle(x, y, z, vx, vy, vz, ax, ay, az, mass, radius float64, color Color) *Particle {
+func NewParticle(x, y, z, vx, vy, vz, ax, ay, az, mass, radius float64, color Color,movable bool) *Particle {
 	return &Particle{
 		X: x, Y: y, Z: z,
 		Vx: vx, Vy: vy, Vz: vz,
@@ -25,6 +26,7 @@ func NewParticle(x, y, z, vx, vy, vz, ax, ay, az, mass, radius float64, color Co
 		Mass:   mass,
 		Radius: radius,
 		Color:  color,
+        Movable: movable,
 	}
 }
 

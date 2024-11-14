@@ -24,6 +24,7 @@ func HandleUserInput(particles *[]*particle.Particle, paused *bool) {
             10.0,     // Mass
             10,       // Radius
             particle.Color{R: 0.5, G: 0.7, B: 1, A: 1}, // Color
+            true,
         )
         *particles = append(*particles, newParticle)
     }
