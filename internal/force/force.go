@@ -45,43 +45,45 @@ func ApplyForce(p *particle.Particle, f *Force) {
 
 // ApplyForces calculates all forces acting on a particle.
 // It includes gravitational, electrostatic, or other forces you may want to add.
+// ApplyForces calculates all forces acting on a particle.
 func ApplyForces(particles []*particle.Particle) {
-	for i := range particles {
+    for i := range particles {
         totalForceX := 0.0
         totalForceY := 0.0
         totalForceZ := 0.0
 
-        // Apply gravitational forces (could be implemented separately if needed)
-        // Apply electrostatic forces
         for j := range particles {
             if i != j {
-                // Calculate electrostatic force between particles[i] and particles[j]
-                electrostaticForce := electrostatics.CalculateElectrostaticForce(particles[i], particles[j])
-
-                // Calculate direction of the electrostatic force
                 dx := particles[j].X - particles[i].X
                 dy := particles[j].Y - particles[i].Y
                 dz := particles[j].Z - particles[i].Z
                 distance := math.Sqrt(dx*dx + dy*dy + dz*dz)
+
+                if distance < 1e-6 {
+                    continue
+                }
+
+                electrostaticForce := electrostatics.CalculateElectrostaticForce(particles[i], particles[j])
 
                 // Normalize the direction vector
                 normX := dx / distance
                 normY := dy / distance
                 normZ := dz / distance
 
-                // Apply electrostatic force to X, Y, and Z components
                 totalForceX += electrostaticForce * normX
                 totalForceY += electrostaticForce * normY
                 totalForceZ += electrostaticForce * normZ
             }
         }
 
-        // Apply the resulting force to the particle (change in velocity based on total force)
-        particles[i].Fx = totalForceX
-        particles[i].Fy = totalForceY
-        particles[i].Fz = totalForceZ
+        // Apply the resulting force to the particle's velocity (change in velocity based on total force)
+        particles[i].Vx += totalForceX / particles[i].Mass
+        particles[i].Vy += totalForceY / particles[i].Mass
+        particles[i].Vz += totalForceZ / particles[i].Mass
     }
 }
+
+
 
 // CalculateGravitationalForce calculates the gravitational force between two particles.
 // If you want to include gravitational forces, you can define it here and include it in ApplyForces.

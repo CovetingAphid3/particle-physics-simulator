@@ -43,22 +43,29 @@ func drawParticleCircle(p *particle.Particle) {
 func DrawParticleInfo(particles []*particle.Particle) {
 	mouseX := float64(rl.GetMouseX())
 	mouseY := float64(rl.GetMouseY())
+	var nearestParticle *particle.Particle
+	var minDistance float64 = 1000000 // Set a high initial value
+
+	// Find the nearest particle
 	for _, p := range particles {
 		dx, dy := p.X-mouseX, p.Y-mouseY
 		distance := math.Sqrt(dx*dx + dy*dy)
 
-		// If mouse is near particle, show particle info
-		if distance < p.Radius {
-			info := fmt.Sprintf("Mass: %.2f, Velocity: (%.2f, %.2f)", p.Mass, p.Vx, p.Vy)
-			// textWidth := rl.MeasureText(info, 10)
-			textHeight := 10
-			xPos := int32(p.X) + 10
-			yPos := int32(p.Y) - int32(textHeight) - int32(5)
-			rl.DrawText(info, xPos, yPos, 10, rl.Yellow)
-			break
+		if distance < p.Radius && distance < minDistance {
+			minDistance = distance
+			nearestParticle = p
 		}
 	}
+
+	if nearestParticle != nil {
+		info := fmt.Sprintf("Mass: %.2f, Velocity: (%.2f, %.2f)", nearestParticle.Mass, nearestParticle.Vx, nearestParticle.Vy)
+		textHeight := 10
+		xPos := int32(nearestParticle.X) + 10
+		yPos := int32(nearestParticle.Y) - int32(textHeight) - int32(5)
+		rl.DrawText(info, xPos, yPos, 10, rl.Yellow)
+	}
 }
+
 
 // DrawUI renders the UI overlay with information like FPS, particle count, and current status (Paused/Running).
 func DrawUI(particles []*particle.Particle, paused bool) {
@@ -76,7 +83,7 @@ func DrawUI(particles []*particle.Particle, paused bool) {
 
 	// Display instructions for controls
 	instructions := "Controls: [Space] Pause/Resume | [Left Click] Add Particle | [Right Click] Remove Particle"
-	rl.DrawText(instructions, 10, int32(screenHeight)-40, 15, rl.Gray)
+	rl.DrawText(instructions, 10, int32(screenHeight)-500, 15, rl.Gray)
 }
 
 // CloseWindow closes the application window when called.

@@ -36,8 +36,10 @@ const AirDragCoefficient = 0.00009
 const Gravity = 980.0
 
 // Damping factor for bounces
-const DampingFactor = 0.7
+const DampingFactor = 0.8
 
 // Velocity threshold for stopping
 const VelocityThreshold = 20.0
+
+const CoefficientOfRestitution = 0.8 // Typical value for elastic collisions
 

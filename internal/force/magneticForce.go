@@ -1,3 +1,4 @@
+//internal/force/magneticForce.go
 package force
 
 import (
