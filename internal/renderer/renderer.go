@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	screenWidth   int     = 800
-	screenHeight  int     = 600
+	screenWidth   int     = 1800
+	screenHeight  int     = 950
 	groundLevel   float64 = 580
 	dampingFactor float64 = 0.9
 	buttonSize    int     = 20 // Button size for window control buttons
@@ -83,7 +83,7 @@ func DrawUI(particles []*particle.Particle, paused bool) {
 
 	// Display instructions for controls
 	instructions := "Controls: [Space] Pause/Resume | [Left Click] Add Particle | [Right Click] Remove Particle"
-	rl.DrawText(instructions, 10, int32(screenHeight)-500, 15, rl.Gray)
+	rl.DrawText(instructions, 10, int32(screenHeight)-870, 15, rl.Gray)
 }
 
 // CloseWindow closes the application window when called.

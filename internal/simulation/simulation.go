@@ -37,8 +37,8 @@ func RunSimulation(particles []*particle.Particle) {
 			// Update physics if simulation is running
 			for _, p := range particles {
 				// Apply forces (e.g., electrostatic, magnetic)
-				// physics.ApplyElectrostaticForces(particles)
-				// physics.ApplyMagneticForces(particles, MagneticFieldX, MagneticFieldY, MagneticFieldZ)
+				physics.ApplyElectrostaticForces(particles)
+				physics.ApplyMagneticForces(particles, MagneticFieldX, MagneticFieldY, MagneticFieldZ)
 
 				// Update velocity and position based on applied forces
 				physics.UpdateVelocity(p, dt)

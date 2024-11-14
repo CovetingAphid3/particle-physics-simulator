@@ -30,7 +30,7 @@ func NewParticle(x, y, z, vx, vy, vz, ax, ay, az, mass, radius float64, color Co
 	}
 }
 
-func NewCoulombParticle(x, y, z, vx, vy, vz, ax, ay, az, mass, radius float64, color Color, charge float64) *Particle {
+func NewCoulombParticle(x, y, z, vx, vy, vz, ax, ay, az, mass, radius float64, color Color, charge float64,movable bool) *Particle {
     return &Particle{
         X: x, Y: y, Z: z,
         Vx: vx, Vy: vy, Vz: vz,
@@ -40,5 +40,6 @@ func NewCoulombParticle(x, y, z, vx, vy, vz, ax, ay, az, mass, radius float64, c
         Color:  color,
         Charge: charge,  // Set the charge for this particle
         Fx: 0.0, Fy: 0.0, Fz: 0.0,  // Initialize forces to zero
+        Movable: movable,
     }
 }

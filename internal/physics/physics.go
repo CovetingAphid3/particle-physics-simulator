@@ -50,11 +50,11 @@ func applyFriction(p *particle.Particle) {
 // UpdateVelocity updates particle velocity based on forces
 func UpdateVelocity(p *particle.Particle, dt float64) {
 	// Apply gravity if not grounded
-	ApplyGravity(p)
+	// ApplyGravity(p)
 
 	// Apply air friction if not grounded
 	if !p.IsGrounded {
-		ApplyAirFriction(p)
+		// ApplyAirFriction(p)
 	}
 
 	// Update velocity based on acceleration and time step
@@ -105,7 +105,7 @@ func ApplyBoundaryConditions(p *particle.Particle, screenWidth, screenHeight int
 				p.Y = groundY
 			}
 		} else {
-			applyFriction(p) // Apply friction when grounded
+			// applyFriction(p) // Apply friction when grounded
 			p.Y = groundY
 			p.Vy = 0
 			p.Ay = 0
