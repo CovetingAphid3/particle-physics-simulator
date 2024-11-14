@@ -26,17 +26,26 @@ func ApplyAirFriction(p *particle.Particle) {
 
 // applyFriction applies ground friction to a grounded particle
 func applyFriction(p *particle.Particle) {
-	if p.Vx > 0 {
-		p.Vx -= constants.GroundFrictionCoefficient * p.Mass * constants.Gravity / p.Mass
-		if p.Vx < 0 {
-			p.Vx = 0
-		}
-	} else if p.Vx < 0 {
-		p.Vx += constants.GroundFrictionCoefficient * p.Mass * constants.Gravity / p.Mass
-		if p.Vx > 0 {
-			p.Vx = 0
-		}
-	}
+    frictionCoef := constants.GroundFrictionCoefficient
+    if p.Movable {
+        // Apply higher friction for movable particles
+        frictionCoef *= 1.2
+    } else {
+        // Apply lower friction for non-movable (obstacle) particles
+        frictionCoef *= 0.8
+    }
+    
+    if p.Vx > 0 {
+        p.Vx -= frictionCoef * p.Mass * constants.Gravity / p.Mass
+        if p.Vx < 0 {
+            p.Vx = 0
+        }
+    } else if p.Vx < 0 {
+        p.Vx += frictionCoef * p.Mass * constants.Gravity / p.Mass
+        if p.Vx > 0 {
+            p.Vx = 0
+        }
+    }
 }
 
 // UpdateVelocity updates particle velocity based on forces
@@ -47,21 +56,24 @@ func UpdateVelocity(p *particle.Particle, dt float64) {
 	// Apply gravity if not grounded
 	ApplyGravity(p)
 
-	if !p.IsGrounded {
-		p.Vx += p.Ax * dt
-		p.Vy += p.Ay * dt
-		p.Vz += p.Az * dt
-	}
+    if p.Movable{
+        if !p.IsGrounded {
+            p.Vx += p.Ax * dt
+            p.Vy += p.Ay * dt
+            p.Vz += p.Az * dt
+        }
+    }
 }
 
 // UpdatePosition updates the particle position based on its velocity
 func UpdatePosition(p *particle.Particle, dt float64) {
-	scaledDt := dt * 2.0
-	p.X += p.Vx * scaledDt
-	if !p.IsGrounded {
-		p.Y += p.Vy * scaledDt
-	}
-	p.Z += p.Vz * scaledDt
+    if p.Movable {
+        p.X += p.Vx * dt
+        if !p.IsGrounded {
+            p.Y += p.Vy * dt
+        }
+        p.Z += p.Vz * dt
+    }
 }
 
 // ApplyBoundaryConditions handles boundary constraints for particles
