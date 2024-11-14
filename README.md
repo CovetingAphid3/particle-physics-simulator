@@ -44,8 +44,15 @@ To start the simulation, run the `main` function, which initializes the particle
 **NOTE**: It may take some time to run the first time as it builds the dependencies.
 
 ```bash
-go run main.go
+go run cmd/main.go
 ```
+**OR** Build and run
+
+```bash
+go build cmd/main.go
+./main
+```
+
 
 This will launch the simulation with particles initialized at predefined positions, velocities, and charges. The particles will interact based on Coulomb’s Law, and you will see them move according to the forces applied.
 
