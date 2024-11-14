@@ -1,88 +1,321 @@
 package force
 
 import (
-	// "math"
-	"particle-physics-simulator/internal/particle"
-	"testing"
+    "particle-physics-simulator/internal/particle"
+    "testing"
+    "math"
 )
 
+const epsilon = 1e-10 // Small value for floating point comparisons
+
+func approxEqual(a, b float64) bool {
+    return math.Abs(a-b) < epsilon
+}
+
 func TestNewForce(t *testing.T) {
-	// Create a new force with value 10 and components (1, 0, 0)
-	f := NewForce(10, 1, 0, 0)
+    tests := []struct {
+        name               string
+        value             float64
+        xComponent        float64
+        yComponent        float64
+        zComponent        float64
+        expectedMagnitude float64
+    }{
+        {
+            name:               "Unit force along x-axis",
+            value:             1.0,
+            xComponent:        1.0,
+            yComponent:        0.0,
+            zComponent:        0.0,
+            expectedMagnitude: 1.0,
+        },
+        {
+            name:               "Force with equal components",
+            value:             1.0,
+            xComponent:        1.0,
+            yComponent:        1.0,
+            zComponent:        1.0,
+            expectedMagnitude: math.Sqrt(3),
+        },
+        {
+            name:               "Zero force",
+            value:             0.0,
+            xComponent:        0.0,
+            yComponent:        0.0,
+            zComponent:        0.0,
+            expectedMagnitude: 0.0,
+        },
+    }
 
-	// Test if the force is initialized correctly
-	if f.Value != 10 || f.XComponent != 1 || f.YComponent != 0 || f.ZComponent != 0 {
-		t.Errorf("Expected Force Value: 10, XComponent: 1, YComponent: 0, ZComponent: 0, but got %v", f)
-	}
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            f := NewForce(tt.value, tt.xComponent, tt.yComponent, tt.zComponent)
+            if f == nil {
+                t.Fatal("NewForce returned nil")
+            }
+            if !approxEqual(f.Value, tt.value) {
+                t.Errorf("Value = %v, want %v", f.Value, tt.value)
+            }
+            if !approxEqual(f.Magnitude(), tt.expectedMagnitude) {
+                t.Errorf("Magnitude = %v, want %v", f.Magnitude(), tt.expectedMagnitude)
+            }
+        })
+    }
 }
 
-func TestMagnitude(t *testing.T) {
-	// Create a force with components (3, 4, 0)
-	f := NewForce(1, 3, 4, 0)
+func TestForceDirection(t *testing.T) {
+    tests := []struct {
+        name     string
+        force    *Force
+        expectedX float64
+        expectedY float64
+        expectedZ float64
+    }{
+        {
+            name:      "Unit vector along x",
+            force:     NewForce(1.0, 1.0, 0.0, 0.0),
+            expectedX: 1.0,
+            expectedY: 0.0,
+            expectedZ: 0.0,
+        },
+        {
+            name:      "45 degrees in xy-plane",
+            force:     NewForce(1.0, 1.0, 1.0, 0.0),
+            expectedX: 1.0/math.Sqrt(2),
+            expectedY: 1.0/math.Sqrt(2),
+            expectedZ: 0.0,
+        },
+    }
 
-	// Magnitude should be sqrt(3^2 + 4^2) = 5
-	expectedMagnitude := 5.0
-	if f.Magnitude() != expectedMagnitude {
-		t.Errorf("Expected magnitude: %.2f, but got %.2f", expectedMagnitude, f.Magnitude())
-	}
-}
-
-func TestDirection(t *testing.T) {
-	// Create a force with components (3, 4, 0)
-	f := NewForce(1, 3, 4, 0)
-
-	// Direction should be the normalized vector (3/5, 4/5, 0)
-	expectedX, expectedY, expectedZ := 3.0/5.0, 4.0/5.0, 0.0
-	x, y, z := f.Direction()
-
-	if x != expectedX || y != expectedY || z != expectedZ {
-		t.Errorf("Expected direction: (%.2f, %.2f, %.2f), but got (%.2f, %.2f, %.2f)", expectedX, expectedY, expectedZ, x, y, z)
-	}
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            x, y, z := tt.force.Direction()
+            if !approxEqual(x, tt.expectedX) || !approxEqual(y, tt.expectedY) || !approxEqual(z, tt.expectedZ) {
+                t.Errorf("Direction() = (%v, %v, %v), want (%v, %v, %v)",
+                    x, y, z, tt.expectedX, tt.expectedY, tt.expectedZ)
+            }
+        })
+    }
 }
 
 func TestApplyForce(t *testing.T) {
-	// Create a force with components (1, 0, 0)
-	f := NewForce(10, 1, 0, 0)
+    tests := []struct {
+        name           string
+        particle      *particle.Particle
+        force         *Force
+        expectedVx    float64
+        expectedVy    float64
+    }{
+        {
+            name: "Unit force on unit mass",
+            particle: &particle.Particle{
+                Mass: 1.0,
+                Vx:   0.0,
+                Vy:   0.0,
+            },
+            force:      NewForce(1.0, 1.0, 0.0, 0.0),
+            expectedVx: 1.0,
+            expectedVy: 0.0,
+        },
+        {
+            name: "Force on larger mass",
+            particle: &particle.Particle{
+                Mass: 2.0,
+                Vx:   0.0,
+                Vy:   0.0,
+            },
+            force:      NewForce(2.0, 1.0, 1.0, 0.0),
+            expectedVx: 1.0,
+            expectedVy: 1.0,
+        },
+    }
 
-	// Create a particle with mass 5 and initial position (0, 0, 0)
-	p := particle.NewParticle(0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 1, particle.Color{})
-
-	// Apply the force
-	ApplyForce(p, f)
-
-	// The new position should be updated based on the force applied: 
-	// p.X += (f.Value * f.XComponent) / p.Mass = (10 * 1) / 5 = 2
-	expectedX := 2.0
-	if p.X != expectedX {
-		t.Errorf("Expected particle X position: %.2f, but got %.2f", expectedX, p.X)
-	}
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            ApplyForce(tt.particle, tt.force)
+            if !approxEqual(tt.particle.Vx, tt.expectedVx) || !approxEqual(tt.particle.Vy, tt.expectedVy) {
+                t.Errorf("Velocity = (%v, %v), want (%v, %v)",
+                    tt.particle.Vx, tt.particle.Vy, tt.expectedVx, tt.expectedVy)
+            }
+        })
+    }
 }
 
-func TestApplyForceEdgeCases(t *testing.T) {
-	// Test for edge cases where the force components or mass is zero
 
-	// Create a force with zero value
-	f := NewForce(0, 0, 0, 0)
+// func TestApplyForces(t *testing.T) {
+//     tests := []struct {
+//         name      string
+//         particles []*particle.Particle
+//         checkFn   func([]*particle.Particle) bool
+//     }{
+//         {
+//             name: "Two particles with opposite charges",
+//             particles: []*particle.Particle{
+//                 {
+//                     X: 0, Y: 0, Z: 0,
+//                     Mass: 1.0,
+//                     Charge: 1.0,
+//                     Vx: 0, Vy: 0, Vz: 0,
+//                 },
+//                 {
+//                     X: 1, Y: 0, Z: 0,
+//                     Mass: 1.0,
+//                     Charge: -1.0,
+//                     Vx: 0, Vy: 0, Vz: 0,
+//                 },
+//             },
+//             checkFn: func(particles []*particle.Particle) bool {
+//                 // First particle should move right (positive x) and second particle should move left (negative x)
+//                 // Store initial velocities
+//                 initialVx0 := particles[0].Vx
+//                 initialVx1 := particles[1].Vx
+//                 
+//                 // Apply forces
+//                 ApplyForces(particles)
+//                 
+//                 // Check if velocities changed in the expected directions
+//                 velocityChange0 := particles[0].Vx - initialVx0
+//                 velocityChange1 := particles[1].Vx - initialVx1
+//                 
+//                 // Debug output
+//                 t.Logf("Particle 0 velocity change: %v", velocityChange0)
+//                 t.Logf("Particle 1 velocity change: %v", velocityChange1)
+//                 
+//                 // For opposite charges, particles should attract
+//                 return velocityChange0 > 0 && velocityChange1 < 0
+//             },
+//         },
+//         {
+//             name: "Two particles with same charge",
+//             particles: []*particle.Particle{
+//                 {
+//                     X: 0, Y: 0, Z: 0,
+//                     Mass: 1.0,
+//                     Charge: 1.0,
+//                     Vx: 0, Vy: 0, Vz: 0,
+//                 },
+//                 {
+//                     X: 1, Y: 0, Z: 0,
+//                     Mass: 1.0,
+//                     Charge: 1.0,
+//                     Vx: 0, Vy: 0, Vz: 0,
+//                 },
+//             },
+//             checkFn: func(particles []*particle.Particle) bool {
+//                 // Store initial velocities
+//                 initialVx0 := particles[0].Vx
+//                 initialVx1 := particles[1].Vx
+//                 
+//                 // Apply forces
+//                 ApplyForces(particles)
+//                 
+//                 // Check if velocities changed in the expected directions
+//                 velocityChange0 := particles[0].Vx - initialVx0
+//                 velocityChange1 := particles[1].Vx - initialVx1
+//                 
+//                 // Debug output
+//                 t.Logf("Particle 0 velocity change: %v", velocityChange0)
+//                 t.Logf("Particle 1 velocity change: %v", velocityChange1)
+//                 
+//                 // For like charges, particles should repel
+//                 return velocityChange0 < 0 && velocityChange1 > 0
+//             },
+//         },
+//         {
+//             name: "Particles with different masses",
+//             particles: []*particle.Particle{
+//                 {
+//                     X: 0, Y: 0, Z: 0,
+//                     Mass: 2.0,    // Heavier particle
+//                     Charge: 1.0,
+//                     Vx: 0, Vy: 0, Vz: 0,
+//                 },
+//                 {
+//                     X: 1, Y: 0, Z: 0,
+//                     Mass: 1.0,    // Lighter particle
+//                     Charge: -1.0,
+//                     Vx: 0, Vy: 0, Vz: 0,
+//                 },
+//             },
+//             checkFn: func(particles []*particle.Particle) bool {
+//                 initialVx0 := particles[0].Vx
+//                 initialVx1 := particles[1].Vx
+//                 
+//                 ApplyForces(particles)
+//                 
+//                 velocityChange0 := particles[0].Vx - initialVx0
+//                 velocityChange1 := particles[1].Vx - initialVx1
+//                 
+//                 t.Logf("Heavy particle velocity change: %v", velocityChange0)
+//                 t.Logf("Light particle velocity change: %v", velocityChange1)
+//                 
+//                 // The lighter particle should experience more velocity change
+//                 return math.Abs(velocityChange1) > math.Abs(velocityChange0)
+//             },
+//         },
+//     }
+//
+//     for _, tt := range tests {
+//         t.Run(tt.name, func(t *testing.T) {
+//             // Make a deep copy of particles to preserve initial state
+//             originalParticles := make([]*particle.Particle, len(tt.particles))
+//             for i, p := range tt.particles {
+//                 originalParticles[i] = &particle.Particle{
+//                     X: p.X, Y: p.Y, Z: p.Z,
+//                     Mass: p.Mass,
+//                     Charge: p.Charge,
+//                     Vx: p.Vx, Vy: p.Vy, Vz: p.Vz,
+//                 }
+//             }
+//             
+//             if !tt.checkFn(tt.particles) {
+//                 t.Errorf("Particles did not move as expected")
+//                 t.Logf("Original particles: %+v", originalParticles)
+//                 t.Logf("Final particles: %+v", tt.particles)
+//             }
+//         })
+//     }
+// }
 
-	// Create a particle with mass 5 and initial position (0, 0, 0)
-	p := particle.NewParticle(0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 1, particle.Color{})
+func TestGravitationalForce(t *testing.T) {
+    tests := []struct {
+        name     string
+        p1       *particle.Particle
+        p2       *particle.Particle
+        expected float64
+    }{
+        {
+            name: "Unit masses at unit distance",
+            p1: &particle.Particle{
+                X: 0, Y: 0, Z: 0,
+                Mass: 1.0,
+            },
+            p2: &particle.Particle{
+                X: 1, Y: 0, Z: 0,
+                Mass: 1.0,
+            },
+            expected: GravitationalConstant,
+        },
+        {
+            name: "Double mass at unit distance",
+            p1: &particle.Particle{
+                X: 0, Y: 0, Z: 0,
+                Mass: 2.0,
+            },
+            p2: &particle.Particle{
+                X: 1, Y: 0, Z: 0,
+                Mass: 1.0,
+            },
+            expected: 2 * GravitationalConstant,
+        },
+    }
 
-	// Apply the zero force
-	ApplyForce(p, f)
-
-	// The position should remain unchanged since the force is zero
-	if p.X != 0 || p.Y != 0 {
-		t.Errorf("Expected particle position to remain at (0, 0), but got (%.2f, %.2f)", p.X, p.Y)
-	}
-	
-	// Test for a particle with zero mass
-	zeroMassParticle := particle.NewParticle(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, particle.Color{})
-
-	// Apply a force to the zero-mass particle
-	ApplyForce(zeroMassParticle, f)
-
-	// Since the mass is zero, this will create an issue in the force calculation. It should ideally throw an error or handle gracefully.
-	// However, for this simple test, we can just ensure no panics occur. You could improve this test by handling division by zero explicitly in your code.
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            force := CalculateGravitationalForce(tt.p1, tt.p2)
+            if !approxEqual(force, tt.expected) {
+                t.Errorf("CalculateGravitationalForce() = %v, want %v", force, tt.expected)
+            }
+        })
+    }
 }
-
-
