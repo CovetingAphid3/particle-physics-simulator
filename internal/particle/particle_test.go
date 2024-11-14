@@ -5,22 +5,47 @@ import (
 	"reflect"
 )
 
+// Test for NewParticle function
 func TestNewParticle(t *testing.T) {
-	color := Color{R: 1, G: 0, B: 0, A: 1}
-	p := NewParticle(10, 20, 30, 1, 1, 1, 0, 0, 0, 5, 2, color)
+	color := Color{R: 0.5, G: 0.5, B: 0.5, A: 1.0}
+	p := NewParticle(1.0, 2.0, 3.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, color, true)
 
-	// Check that the particle's fields match the values we passed in
-	if p.X != 10 || p.Y != 20 || p.Z != 30 {
-		t.Errorf("NewParticle() failed to initialize position. Got: (%f, %f, %f)", p.X, p.Y, p.Z)
+	if p.X != 1.0 || p.Y != 2.0 || p.Z != 3.0 {
+		t.Errorf("Expected position (1.0, 2.0, 3.0), got (%v, %v, %v)", p.X, p.Y, p.Z)
 	}
-	if p.Vx != 1 || p.Vy != 1 || p.Vz != 1 {
-		t.Errorf("NewParticle() failed to initialize velocity. Got: (%f, %f, %f)", p.Vx, p.Vy, p.Vz)
+	if p.Vx != 0.0 || p.Vy != 0.0 || p.Vz != 0.0 {
+		t.Errorf("Expected velocity (0.0, 0.0, 0.0), got (%v, %v, %v)", p.Vx, p.Vy, p.Vz)
 	}
-	if p.Mass != 5 || p.Radius != 2 {
-		t.Errorf("NewParticle() failed to initialize mass or radius. Got: mass=%f, radius=%f", p.Mass, p.Radius)
+	if p.Mass != 1.0 || p.Radius != 1.0 {
+		t.Errorf("Expected mass 1.0 and radius 1.0, got mass %v and radius %v", p.Mass, p.Radius)
 	}
 	if !reflect.DeepEqual(p.Color, color) {
-		t.Errorf("NewParticle() failed to initialize color. Got: %+v", p.Color)
+		t.Errorf("Expected color %+v, got %+v", color, p.Color)
+	}
+	if !p.Movable {
+		t.Errorf("Expected particle to be movable")
+	}
+}
+
+// Test for NewCoulombParticle function
+func TestNewCoulombParticle(t *testing.T) {
+	color := Color{R: 0.5, G: 0.5, B: 0.5, A: 1.0}
+	p := NewCoulombParticle(1.0, 2.0, 3.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, color, 1.0)
+
+	if p.X != 1.0 || p.Y != 2.0 || p.Z != 3.0 {
+		t.Errorf("Expected position (1.0, 2.0, 3.0), got (%v, %v, %v)", p.X, p.Y, p.Z)
+	}
+	if p.Vx != 0.0 || p.Vy != 0.0 || p.Vz != 0.0 {
+		t.Errorf("Expected velocity (0.0, 0.0, 0.0), got (%v, %v, %v)", p.Vx, p.Vy, p.Vz)
+	}
+	if p.Mass != 1.0 || p.Radius != 1.0 {
+		t.Errorf("Expected mass 1.0 and radius 1.0, got mass %v and radius %v", p.Mass, p.Radius)
+	}
+	if !reflect.DeepEqual(p.Color, color) {
+		t.Errorf("Expected color %+v, got %+v", color, p.Color)
+	}
+	if p.Charge != 1.0 {
+		t.Errorf("Expected charge 1.0, got %v", p.Charge)
 	}
 }
 
