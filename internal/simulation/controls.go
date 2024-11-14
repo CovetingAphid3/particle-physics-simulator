@@ -1,9 +1,9 @@
 package simulation
 
 import (
-    "math"
-    "particle-physics-simulator/internal/particle"
-    "github.com/gen2brain/raylib-go/raylib"
+	"math"
+	"particle-physics-simulator/internal/particle"
+	"github.com/gen2brain/raylib-go/raylib"
 )
 
 // HandleUserInput handles user interactions for the simulation.

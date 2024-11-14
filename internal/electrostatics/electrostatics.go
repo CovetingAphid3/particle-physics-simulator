@@ -1,9 +1,9 @@
 package electrostatics
 
 import (
-    "particle-physics-simulator/internal/particle"
-    "particle-physics-simulator/internal/constants"
     "math"
+    "particle-physics-simulator/internal/constants"
+    "particle-physics-simulator/internal/particle"
 )
 
 // CalculateElectrostaticForce calculates the electrostatic force between two charged particles using Coulomb's law.
@@ -11,7 +11,8 @@ func CalculateElectrostaticForce(p1, p2 *particle.Particle) float64 {
     // Ensure the particles have a non-zero distance between them
     dx := p2.X - p1.X
     dy := p2.Y - p1.Y
-    distanceSquared := dx*dx + dy*dy
+    // dz := p2.Z - p1.Z
+    distanceSquared := dx*dx + dy*dy //+ dz*dz
     distance := math.Sqrt(distanceSquared)
 
     // Avoid division by zero (if particles are too close)
@@ -25,3 +26,4 @@ func CalculateElectrostaticForce(p1, p2 *particle.Particle) float64 {
     // Return the magnitude of the force
     return forceMagnitude
 }
+

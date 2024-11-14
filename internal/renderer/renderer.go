@@ -19,14 +19,16 @@ const (
 
 func InitWindow() {
 	rl.InitWindow(int32(screenWidth), int32(screenHeight), "Particle Physics Simulator")
-	rl.SetTargetFPS(120)
+	rl.SetTargetFPS(120) // Set the target FPS for smooth rendering
 }
 
+// DrawParticle draws the particle on the screen and applies the boundary conditions.
 func DrawParticle(p *particle.Particle) {
 	drawParticleCircle(p)
 	physics.ApplyBoundaryConditions(p, screenWidth, screenHeight)
 }
 
+// drawParticleCircle draws a particle as a circle on the screen using the particle's color and position.
 func drawParticleCircle(p *particle.Particle) {
 	color := rl.Color{
 		R: uint8(p.Color.R * 255),
@@ -37,7 +39,7 @@ func drawParticleCircle(p *particle.Particle) {
 	rl.DrawCircle(int32(p.X), int32(p.Y), float32(p.Radius), color)
 }
 
-// DrawParticleInfo shows particle info (e.g., mass, velocity) on hover
+// DrawParticleInfo shows particle info (e.g., mass, velocity) when the mouse hovers over a particle.
 func DrawParticleInfo(particles []*particle.Particle) {
 	mouseX := float64(rl.GetMouseX())
 	mouseY := float64(rl.GetMouseY())
@@ -48,13 +50,17 @@ func DrawParticleInfo(particles []*particle.Particle) {
 		// If mouse is near particle, show particle info
 		if distance < p.Radius {
 			info := fmt.Sprintf("Mass: %.2f, Velocity: (%.2f, %.2f)", p.Mass, p.Vx, p.Vy)
-			rl.DrawText(info, int32(p.X)+10, int32(p.Y)-20, 10, rl.Yellow)
+			// textWidth := rl.MeasureText(info, 10)
+			textHeight := 10
+			xPos := int32(p.X) + 10
+			yPos := int32(p.Y) - int32(textHeight) - int32(5)
+			rl.DrawText(info, xPos, yPos, 10, rl.Yellow)
 			break
 		}
 	}
 }
 
-// DrawUI renders the UI overlay with information like FPS and particle count
+// DrawUI renders the UI overlay with information like FPS, particle count, and current status (Paused/Running).
 func DrawUI(particles []*particle.Particle, paused bool) {
 	fps := rl.GetFPS()
 	particleCount := len(particles)
@@ -70,15 +76,15 @@ func DrawUI(particles []*particle.Particle, paused bool) {
 
 	// Display instructions for controls
 	instructions := "Controls: [Space] Pause/Resume | [Left Click] Add Particle | [Right Click] Remove Particle"
-    h:=rl.GetScreenHeight() - rl.GetScreenHeight() + 80
-	rl.DrawText(instructions, 10, int32(h), 15, rl.Gray)
+	rl.DrawText(instructions, 10, int32(screenHeight)-40, 15, rl.Gray)
 }
 
+// CloseWindow closes the application window when called.
 func CloseWindow() {
 	rl.CloseWindow()
 }
 
-// DrawWindowButtons draws and handles actions for window control buttons.
+// DrawWindowButtons draws and handles actions for window control buttons like close, minimize, and maximize.
 func DrawWindowButtons() {
 	// Define button colors and positions
 	closeButtonColor := rl.Red
@@ -119,3 +125,4 @@ func DrawWindowButtons() {
 		}
 	}
 }
+
