@@ -18,9 +18,9 @@ func HandleUserInput(particles *[]*particle.Particle, paused *bool) {
         mouseX := float64(rl.GetMouseX())
         mouseY := float64(rl.GetMouseY())
         newParticle := particle.NewParticle(
-            mouseX, mouseY, 0,
-            0, 0, 0,  // Starting velocity
-            0, 0, 0,  // Starting acceleration
+            mouseX, mouseY, 
+            0, 0,   // Starting velocity
+            0, 0,   // Starting acceleration
             10.0,     // Mass
             10,       // Radius
             particle.Color{R: 0.5, G: 0.7, B: 1, A: 1}, // Color

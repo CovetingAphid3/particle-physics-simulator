@@ -2,141 +2,173 @@ package force
 
 import (
 	"math"
-	"particle-physics-simulator/internal/particle"
-	"particle-physics-simulator/internal/electrostatics"
 	"particle-physics-simulator/internal/constants"
+	"particle-physics-simulator/internal/electrostatics"
+	"particle-physics-simulator/internal/particle"
+	"runtime"
+	"sync"
 )
-const GravitationalConstant = 6.67430e-11 // m^3 kg^−1 s^−2
-// Force struct represents a force with its magnitude and components (in X, Y, Z directions).
+
+const (
+	CutoffDistanceSquared = 1e4         // Avoid force calculations for particles further apart (100 units)
+)
+
+// Force struct represents a force with its magnitude and components (X, Y directions).
 type Force struct {
-    Value      float64
-    XComponent float64
-    YComponent float64
-    ZComponent float64
+	Value      float64
+	XComponent float64
+	YComponent float64
 }
 
 // NewForce creates a new Force object.
-func NewForce(value, xComponent, yComponent, zComponent float64) *Force {
-    return &Force{
-        Value:      value,
-        XComponent: xComponent,
-        YComponent: yComponent,
-        ZComponent: zComponent,
-    }
+func NewForce(value, xComponent, yComponent float64) *Force {
+	return &Force{
+		Value:      value,
+		XComponent: xComponent,
+		YComponent: yComponent,
+	}
 }
 
-// Magnitude returns the magnitude of the force vector.
-func (f *Force) Magnitude() float64 {
-    return math.Sqrt(f.XComponent*f.XComponent + f.YComponent*f.YComponent + f.ZComponent*f.ZComponent)
+// Preallocated memory pool for force arrays.
+var forcePool = sync.Pool{
+	New: func() interface{} {
+		return make([]float64, 0, 1024) // Default capacity of 1024
+	},
 }
 
-// Direction returns the direction of the force as normalized vector components (X, Y, Z).
-func (f *Force) Direction() (float64, float64, float64) {
-    mag := f.Magnitude()
-    return f.XComponent / mag, f.YComponent / mag, f.ZComponent / mag
+// Utility functions to manage pooled arrays.
+func getForceArray(size int) []float64 {
+	arr := forcePool.Get().([]float64)
+	if cap(arr) < size {
+		return make([]float64, size) // Create new array if needed
+	}
+	return arr[:size]
 }
 
-// ApplyForce directly updates the velocity of a particle based on the force components.
-func ApplyForce(p *particle.Particle, f *Force) {
-    // Apply the force to the particle's velocity (using components)
-	p.Vx += (f.Value * f.XComponent) / p.Mass
-	p.Vy += (f.Value * f.YComponent) / p.Mass
+func releaseForceArray(arr []float64) {
+	forcePool.Put(arr[:0]) // Reset slice for reuse
 }
 
-// ApplyForces calculates all forces acting on a particle.
-// It includes gravitational, electrostatic, or other forces you may want to add.
-// ApplyForces calculates all forces acting on a particle.
-func ApplyForces(particles []*particle.Particle) {
-    for i := range particles {
-        totalForceX := 0.0
-        totalForceY := 0.0
-        totalForceZ := 0.0
+// ApplyForcesParallel calculates electrostatic and gravitational forces concurrently.
+func ApplyForcesParallel(particles []*particle.Particle) {
+	n := len(particles)
+	if n == 0 {
+		return
+	}
 
-        for j := range particles {
-            if i != j {
-                dx := particles[j].X - particles[i].X
-                dy := particles[j].Y - particles[i].Y
-                dz := particles[j].Z - particles[i].Z
-                distance := math.Sqrt(dx*dx + dy*dy + dz*dz)
+	// Preallocate force arrays
+	forceX := getForceArray(n)
+	forceY := getForceArray(n)
+	defer releaseForceArray(forceX)
+	defer releaseForceArray(forceY)
 
-                if distance < 1e-6 {
-                    continue
-                }
+	// Number of goroutines to use
+	numGoroutines := runtime.NumCPU()
+	chunkSize := (n + numGoroutines - 1) / numGoroutines
+	var wg sync.WaitGroup
 
-                electrostaticForce := electrostatics.CalculateElectrostaticForce(particles[i], particles[j])
+	// Parallelize force calculation
+	for g := 0; g < numGoroutines; g++ {
+		start := g * chunkSize
+		end := start + chunkSize
+		if end > n {
+			end = n
+		}
 
-                // Normalize the direction vector
-                normX := dx / distance
-                normY := dy / distance
-                normZ := dz / distance
+		wg.Add(1)
+		go func(start, end int) {
+			defer wg.Done()
+			for i := start; i < end; i++ {
+				p1 := particles[i]
+				if !p1.Movable {
+					continue
+				}
 
-                totalForceX += electrostaticForce * normX
-                totalForceY += electrostaticForce * normY
-                totalForceZ += electrostaticForce * normZ
-            }
-        }
+				for j := i + 1; j < n; j++ {
+					p2 := particles[j]
+					if !p2.Movable {
+						continue
+					}
 
-        // Apply the resulting force to the particle's velocity (change in velocity based on total force)
-        particles[i].Vx += totalForceX / particles[i].Mass
-        particles[i].Vy += totalForceY / particles[i].Mass
-        particles[i].Vz += totalForceZ / particles[i].Mass
-    }
+					// Distance calculation
+					dx := p2.X - p1.X
+					dy := p2.Y - p1.Y
+					distSq := dx*dx + dy*dy
+
+					// Skip calculations if distance is negligible or exceeds cutoff
+					if distSq < 1e-10 || distSq > CutoffDistanceSquared {
+						continue
+					}
+
+					// Inverse distance and distance squared
+					invDist := 1.0 / math.Sqrt(distSq)
+					invDistSq := invDist * invDist
+
+					// Calculate electrostatic force
+					electroForce := electrostatics.CalculateElectrostaticForce(p1, p2)
+
+					// Calculate gravitational force
+					gravForce := constants.GravitationalConstant * p1.Mass * p2.Mass * invDistSq
+
+					// Total force magnitude
+					totalForce := electroForce + gravForce
+
+					// Force components
+					fx := totalForce * dx * invDist
+					fy := totalForce * dy * invDist
+
+					// Apply Newton's third law
+					forceX[i] += fx
+					forceY[i] += fy
+					forceX[j] -= fx
+					forceY[j] -= fy
+				}
+			}
+		}(start, end)
+	}
+
+	wg.Wait()
+
+	// Apply forces to update particle velocities
+	for i, p := range particles {
+		if p.Movable {
+			invMass := 1.0 / p.Mass
+			p.Vx += forceX[i] * invMass
+			p.Vy += forceY[i] * invMass
+		}
+	}
 }
 
-
-
-// CalculateGravitationalForce calculates the gravitational force between two particles.
-// If you want to include gravitational forces, you can define it here and include it in ApplyForces.
-func CalculateGravitationalForce(p1, p2 *particle.Particle) float64 {
-    // Gravitational constant
-    G := constants.GravitationalConstant
-
-    // Calculate the distance between the particles
-    dx := p2.X - p1.X
-    dy := p2.Y - p1.Y
-    dz := p2.Z - p1.Z
-    distanceSquared := dx*dx + dy*dy + dz*dz
-
-    // Gravitational force: F = G * (m1 * m2) / r²
-    forceMagnitude := G * p1.Mass * p2.Mass / distanceSquared
-
-    return forceMagnitude
-}
-
-// ApplyGravitationalForces calculates gravitational forces between all particles
+// ApplyGravitationalForces calculates gravitational forces between all particles.
 func ApplyGravitationalForces(particles []*particle.Particle) {
-    for i := 0; i < len(particles); i++ {
-        for j := i + 1; j < len(particles); j++ {
-            p1 := particles[i]
-            p2 := particles[j]
+	for i := 0; i < len(particles); i++ {
+		for j := i + 1; j < len(particles); j++ {
+			p1 := particles[i]
+			p2 := particles[j]
 
-            // Calculate the distance between the two particles
-            dx := p2.X - p1.X
-            dy := p2.Y - p1.Y
-            dz := p2.Z - p1.Z
-            distance := math.Sqrt(dx*dx + dy*dy + dz*dz)
+			// Distance calculation
+			dx := p2.X - p1.X
+			dy := p2.Y - p1.Y
+			distSq := dx*dx + dy*dy
 
-            // Skip if distance is zero (particles can't interact with themselves)
-            if distance == 0 {
-                continue
-            }
+			if distSq < 1e-10 || distSq > CutoffDistanceSquared {
+				continue
+			}
 
-            // Calculate the gravitational force magnitude
-            forceMagnitude := GravitationalConstant * p1.Mass * p2.Mass / (distance * distance)
+			// Calculate gravitational force
+			invDist := 1.0 / math.Sqrt(distSq)
+			forceMagnitude := constants.GravitationalConstant * p1.Mass * p2.Mass * invDist * invDist
 
-            // Calculate the unit vector direction of the force
-            forceX := forceMagnitude * dx / distance
-            forceY := forceMagnitude * dy / distance
-            forceZ := forceMagnitude * dz / distance
+			// Force components
+			fx := forceMagnitude * dx * invDist
+			fy := forceMagnitude * dy * invDist
 
-            // Apply the force to both particles (action and reaction)
-            p1.Ax += forceX / p1.Mass
-            p1.Ay += forceY / p1.Mass
-            p1.Az += forceZ / p1.Mass
-
-            p2.Ax -= forceX / p2.Mass
-            p2.Ay -= forceY / p2.Mass
-            p2.Az -= forceZ / p2.Mass
-        }
-    }
+			// Apply forces (action-reaction)
+			p1.Ax += fx / p1.Mass
+			p1.Ay += fy / p1.Mass
+			p2.Ax -= fx / p2.Mass
+			p2.Ay -= fy / p2.Mass
+		}
+	}
 }
+
