@@ -36,7 +36,7 @@ const AirDragCoefficient = 0.00009
 const Gravity = 980.0
 
 // Damping factor for bounces
-const DampingFactor = 0.9
+const DampingFactor = 0.7
 
 // Velocity threshold for stopping
 const VelocityThreshold = 20.0

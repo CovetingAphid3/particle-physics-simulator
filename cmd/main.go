@@ -21,8 +21,8 @@ func main() {
 		// Random positions and velocities
 		x := float64(i % 500) // Distribute particles randomly in x
 		y := float64((i * 100) % 500) // Distribute particles randomly in y
-		velocityX := math.Sin(float64(i) * 0.1) * 10
-		velocityY := math.Cos(float64(i) * 0.1) * 10
+		velocityX := math.Sin(float64(i) * 0.1) * 100
+		velocityY := math.Cos(float64(i) * 0.1) * 100
 		
 		// Assign colors in a loop (or make it random)
 		var color particle.Color
