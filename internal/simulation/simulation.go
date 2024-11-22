@@ -2,11 +2,12 @@ package simulation
 
 import (
 	"particle-physics-simulator/internal/collisions"
+	"particle-physics-simulator/internal/force"
 	"particle-physics-simulator/internal/particle"
 	"particle-physics-simulator/internal/physics"
 	"particle-physics-simulator/internal/renderer"
-	"time"
 	"sync"
+	"time"
 
 	"github.com/gen2brain/raylib-go/raylib"
 )
@@ -34,8 +35,12 @@ func RunSimulation(particles []*particle.Particle) {
 
 		if !paused {
 			// Apply global forces (electrostatic and magnetic) to all particles
-			// physics.ApplyElectrostaticForces(particles)
-			// physics.ApplyMagneticForces(particles, MagneticFieldX, MagneticFieldY)
+			physics.ApplyElectrostaticForces(particles)
+			magneticField := force.MagneticField{
+				Strength:  1.0, // Set the magnitude of the B field
+				Direction: 1,   // +1 for out of the plane, -1 for into the plane
+			}
+			physics.ApplyMagneticForces(particles, magneticField)
 
 			// Parallelize particle updates
 			wg.Add(len(particles))
@@ -70,10 +75,9 @@ func RunSimulation(particles []*particle.Particle) {
 
 		// Batch render particles
 		// renderer.DrawParticle(particles)
-        		for _, p := range particles {
+		for _, p := range particles {
 			renderer.DrawParticle(p)
 		}
-
 
 		// Draw UI (status, FPS, particle count, etc.)
 		renderer.DrawUI(particles, paused)
@@ -88,4 +92,3 @@ func RunSimulation(particles []*particle.Particle) {
 		}
 	}
 }
-

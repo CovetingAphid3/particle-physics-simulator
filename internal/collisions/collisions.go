@@ -1,7 +1,5 @@
 package collisions
-
 import (
-	// "log"
 	"math"
 	"particle-physics-simulator/internal/particle"
 )
@@ -10,17 +8,16 @@ import (
 func CheckCollision(p1, p2 *particle.Particle) bool {
 	dx := p1.X - p2.X
 	dy := p1.Y - p2.Y
+	// Using squared distance to avoid unnecessary sqrt calculation
 	distanceSq := dx*dx + dy*dy
 	radiusSum := p1.Radius + p2.Radius
-	if distanceSq < radiusSum*radiusSum {
-		return true
-	}
-	return false
+	// Compare squared values to avoid calculating the square root
+	return distanceSq < radiusSum*radiusSum
 }
 
 // WillCollide checks if two particles will collide based on their velocities and predicted positions.
 func WillCollide(p1, p2 *particle.Particle, dt float64) bool {
-	// Predict the future positions of both particles
+	// Predict the future positions of both particles (no need to recalculate velocity here)
 	p1NextX := p1.X + p1.Vx*dt
 	p1NextY := p1.Y + p1.Vy*dt
 	p2NextX := p2.X + p2.Vx*dt
@@ -31,24 +28,19 @@ func WillCollide(p1, p2 *particle.Particle, dt float64) bool {
 	dy := p1NextY - p2NextY
 	distSq := dx*dx + dy*dy
 
-	// Check if the distance is less than the sum of their radii squared (i.e., a collision)
-	if distSq < (p1.Radius+p2.Radius)*(p1.Radius+p2.Radius) {
-		return true
-	}
-
-	return false
+	// Avoid square root calculation by comparing squared values
+	return distSq < (p1.Radius+p2.Radius)*(p1.Radius+p2.Radius)
 }
 
 // HandleCollision handles the actual collision between two particles.
 func HandleCollision(p1, p2 *particle.Particle) {
-	// Calculate the distance squared between the particles
+	// Calculate the distance squared between the particles once
 	dx := p1.X - p2.X
 	dy := p1.Y - p2.Y
 	distSq := dx*dx + dy*dy
 
-	// If particles are exactly at the same position, skip collision handling
+	// Early exit if particles are exactly at the same position (no collision handling)
 	if distSq == 0 {
-		// log.Println("Particles are exactly overlapping, skipping collision handling.")
 		return
 	}
 
@@ -66,7 +58,6 @@ func HandleCollision(p1, p2 *particle.Particle) {
 
 	// If particles are moving apart, no collision is needed
 	if dotProduct >= 0 {
-		// log.Println("Particles are moving apart, no collision handled.")
 		return
 	}
 
@@ -77,7 +68,6 @@ func HandleCollision(p1, p2 *particle.Particle) {
 	if p1.Movable && !p2.Movable {
 		p1.Vx -= impulse * p2.Mass * nx
 		p1.Vy -= impulse * p2.Mass * ny
-		// log.Printf("Updated velocities: p1(%.2f, %.2f), p2(%.2f, %.2f)", p1.Vx, p1.Vy, p2.Vx, p2.Vy)
 		return
 	}
 
@@ -87,7 +77,6 @@ func HandleCollision(p1, p2 *particle.Particle) {
 		p1.Vy -= impulse * p2.Mass * ny
 		p2.Vx += impulse * p1.Mass * nx
 		p2.Vy += impulse * p1.Mass * ny
-		// log.Printf("Updated velocities: p1(%.2f, %.2f), p2(%.2f, %.2f)", p1.Vx, p1.Vy, p2.Vx, p2.Vy)
 	}
 }
 
