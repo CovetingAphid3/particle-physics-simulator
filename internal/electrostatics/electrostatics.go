@@ -7,7 +7,6 @@ import (
 )
 
 // CalculateElectrostaticForce calculates the magnitude of the electrostatic force between two charged particles.
-// Returns the force magnitude (positive for repulsion, negative for attraction).
 func CalculateElectrostaticForce(p1, p2 *particle.Particle) float64 {
 	if p1.Charge == 0 || p2.Charge == 0 {
 		return 0
@@ -17,8 +16,7 @@ func CalculateElectrostaticForce(p1, p2 *particle.Particle) float64 {
 	dy := p2.Y - p1.Y
 	distSq := dx*dx + dy*dy
 
-	// Use a minimum distance threshold to prevent extreme forces
-	minDistSq := math.Pow(p1.Radius+p2.Radius, 2) // Dynamic threshold
+	minDistSq := math.Pow(p1.Radius+p2.Radius, 2) 
 	if distSq < minDistSq {
 		distSq = minDistSq
 	}
@@ -27,7 +25,6 @@ func CalculateElectrostaticForce(p1, p2 *particle.Particle) float64 {
 }
 
 // CalculateElectrostaticForceVector calculates the components of the electrostatic force between two particles.
-// Returns the force components (fx, fy).
 func CalculateElectrostaticForceVector(p1, p2 *particle.Particle) (fx, fy float64) {
 	if p1.Charge == 0 || p2.Charge == 0 {
 		return 0, 0
@@ -37,13 +34,11 @@ func CalculateElectrostaticForceVector(p1, p2 *particle.Particle) (fx, fy float6
 	dy := p2.Y - p1.Y
 	distSq := dx*dx + dy*dy
 
-	// Use a minimum distance threshold to prevent extreme forces
 	minDistSq := math.Pow(p1.Radius+p2.Radius, 2) // Dynamic threshold
 	if distSq < minDistSq {
 		distSq = minDistSq
 	}
 
-	// Calculate force magnitude
 	forceMag := constants.CoulombsConstant * p1.Charge * p2.Charge / distSq
 
 	// Calculate normalized direction and multiply by force magnitude
@@ -55,7 +50,6 @@ func CalculateElectrostaticForceVector(p1, p2 *particle.Particle) (fx, fy float6
 }
 
 // BatchCalculateElectrostaticForces calculates electrostatic forces for all particles in the system.
-// Updates the forceX and forceY slices with net forces for each particle.
 func BatchCalculateElectrostaticForces(particles []*particle.Particle, forceX, forceY []float64) {
 	n := len(particles)
 

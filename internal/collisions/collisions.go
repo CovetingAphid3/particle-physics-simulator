@@ -4,7 +4,6 @@ import (
 	"particle-physics-simulator/internal/particle"
 )
 
-// CheckCollision checks if two particles are colliding based on their current positions and radii.
 func CheckCollision(p1, p2 *particle.Particle) bool {
 	dx := p1.X - p2.X
 	dy := p1.Y - p2.Y
@@ -28,7 +27,6 @@ func WillCollide(p1, p2 *particle.Particle, dt float64) bool {
 	dy := p1NextY - p2NextY
 	distSq := dx*dx + dy*dy
 
-	// Avoid square root calculation by comparing squared values
 	return distSq < (p1.Radius+p2.Radius)*(p1.Radius+p2.Radius)
 }
 

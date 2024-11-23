@@ -1,27 +1,23 @@
 package physics
 
 import (
-	// "math"
 	"particle-physics-simulator/internal/constants"
 	"particle-physics-simulator/internal/electrostatics"
 	"particle-physics-simulator/internal/force"
 	"particle-physics-simulator/internal/particle"
 )
 
-// ApplyGravity applies gravitational force to a particle.
 func ApplyGravity(p *particle.Particle) {
 	if !p.IsGrounded {
 		p.Ay = constants.Gravity
 	}
 }
 
-// ApplyAirFriction applies air friction to a particle.
 func ApplyAirFriction(p *particle.Particle) {
 	p.Vx -= p.Vx * constants.AirDragCoefficient
 	p.Vy -= p.Vy * constants.AirDragCoefficient
 }
 
-// ApplyFriction applies ground friction to a grounded particle.
 func ApplyFriction(p *particle.Particle) {
 	frictionCoef := constants.GroundFrictionCoefficient
 	if p.Movable {
@@ -43,7 +39,6 @@ func ApplyFriction(p *particle.Particle) {
 	}
 }
 
-// UpdateVelocity updates a particle's velocity based on forces and time step.
 func UpdateVelocity(p *particle.Particle, dt float64) {
 	if p.Movable {
         ApplyGravity(p)
@@ -52,7 +47,6 @@ func UpdateVelocity(p *particle.Particle, dt float64) {
 	}
 }
 
-// UpdatePosition updates a particle's position based on its velocity.
 func UpdatePosition(p *particle.Particle, dt float64) {
 	if p.Movable {
 		p.X += p.Vx * dt
@@ -60,7 +54,6 @@ func UpdatePosition(p *particle.Particle, dt float64) {
 	}
 }
 
-// ApplyBoundaryConditions handles boundary constraints for particles.
 func ApplyBoundaryConditions(p *particle.Particle, screenWidth, screenHeight int) {
 	// Right boundary
 	if p.X+p.Radius > float64(screenWidth) {
@@ -105,7 +98,6 @@ func ApplyMagneticForces(particles []*particle.Particle, magneticField force.Mag
 	}
 }
 
-// ApplyElectrostaticForces calculates and applies electrostatic forces.
 func ApplyElectrostaticForces(particles []*particle.Particle) {
 	for i := range particles {
 		totalFx, totalFy := 0.0, 0.0

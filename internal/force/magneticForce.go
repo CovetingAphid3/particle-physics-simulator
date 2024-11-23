@@ -4,8 +4,7 @@ import (
 	"particle-physics-simulator/internal/particle"
 )
 
-// MagneticForce calculates the magnetic force on a charged particle in a uniform magnetic field (perpendicular to the plane).
-// Returns the force components (Fx, Fy).
+
 func MagneticForce(p *particle.Particle, B float64) (float64, float64) {
 	if p.Charge == 0 || (p.Vx == 0 && p.Vy == 0) {
 		// No force if the particle is uncharged or stationary
@@ -23,8 +22,6 @@ type MagneticField struct {
 	Direction int     // +1 for out of the plane, -1 for into the plane
 }
 
-// MagneticForceWithDirection calculates the magnetic force considering the direction of the field.
-// Returns the force components (Fx, Fy).
 func MagneticForceWithDirection(p *particle.Particle, field MagneticField) (float64, float64) {
 	B := field.Strength * float64(field.Direction)
 	return MagneticForce(p, B)
@@ -36,7 +33,6 @@ type MagneticField2D struct {
 }
 
 // MagneticForceNonUniform calculates the magnetic force for a particle in a non-uniform field.
-// Returns the force components (Fx, Fy).
 func MagneticForceNonUniform(p *particle.Particle, field MagneticField2D) (float64, float64) {
 	B, direction := field.FieldFunc(p.X, p.Y)
 	B *= float64(direction)

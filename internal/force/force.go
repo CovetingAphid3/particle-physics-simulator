@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	CutoffDistanceSquared = 1e4         // Avoid force calculations for particles further apart (100 units)
+	CutoffDistanceSquared = 1e4         
 )
 
 // Force struct represents a force with its magnitude and components (X, Y directions).
@@ -20,7 +20,7 @@ type Force struct {
 	YComponent float64
 }
 
-// NewForce creates a new Force object.
+// NewForce creates a new Force object
 func NewForce(value, xComponent, yComponent float64) *Force {
 	return &Force{
 		Value:      value,
@@ -40,7 +40,7 @@ var forcePool = sync.Pool{
 func getForceArray(size int) []float64 {
 	arr := forcePool.Get().([]float64)
 	if cap(arr) < size {
-		return make([]float64, size) // Create new array if needed
+		return make([]float64, size) 
 	}
 	return arr[:size]
 }

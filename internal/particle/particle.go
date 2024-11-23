@@ -38,7 +38,7 @@ func NewCoulombParticle(x, y,  vx, vy, ax, ay,  mass, radius float64, color Colo
         Mass:   mass,
         Radius: radius,
         Color:  color,
-        Charge: charge,  // Set the charge for this particle
+        Charge: charge,  
         Fx: 0.0, Fy: 0.0, 
         Movable: movable,
     }
