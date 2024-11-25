@@ -10,19 +10,18 @@ import (
 )
 
 const (
-	screenWidth   int     = 800
-	screenHeight  int     = 600
+	screenWidth   int     = 1800
+	screenHeight  int     = 950
 	groundLevel   float64 = 580
 	dampingFactor float64 = 0.9
-	buttonSize    int     = 20 // Button size for window control buttons
+	buttonSize    int     = 20 
 )
 
 func InitWindow() {
 	rl.InitWindow(int32(screenWidth), int32(screenHeight), "Particle Physics Simulator")
-	rl.SetTargetFPS(120) // Set the target FPS for smooth rendering
+	rl.SetTargetFPS(120) 
 }
 
-// DrawParticle draws the particle on the screen and applies the boundary conditions.
 func DrawParticle(p *particle.Particle) {
 	drawParticleCircle(p)
 	physics.ApplyBoundaryConditions(p, screenWidth, screenHeight)
@@ -67,7 +66,6 @@ func DrawParticleInfo(particles []*particle.Particle) {
 }
 
 
-// DrawUI renders the UI overlay with information like FPS, particle count, and current status (Paused/Running).
 func DrawUI(particles []*particle.Particle, paused bool) {
 	fps := rl.GetFPS()
 	particleCount := len(particles)
@@ -83,17 +81,15 @@ func DrawUI(particles []*particle.Particle, paused bool) {
 
 	// Display instructions for controls
 	instructions := "Controls: [Space] Pause/Resume | [Left Click] Add Particle | [Right Click] Remove Particle"
-	rl.DrawText(instructions, 10, int32(screenHeight)-500, 15, rl.Gray)
+	rl.DrawText(instructions, 10, int32(screenHeight)-870, 15, rl.Gray)
 }
 
-// CloseWindow closes the application window when called.
 func CloseWindow() {
 	rl.CloseWindow()
 }
 
 // DrawWindowButtons draws and handles actions for window control buttons like close, minimize, and maximize.
 func DrawWindowButtons() {
-	// Define button colors and positions
 	closeButtonColor := rl.Red
 	maximizeButtonColor := rl.Gray
 	minimizeButtonColor := rl.Yellow
