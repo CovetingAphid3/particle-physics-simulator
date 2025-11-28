@@ -24,20 +24,24 @@ func InitWindow() {
 }
 
 func DrawParticle(p *particle.Particle) {
-	drawParticleCircle(p)
-	physics.ApplyBoundaryConditions(p, screenWidth, screenHeight)
-}
-
-// drawParticleCircle draws a particle as a circle on the screen using the particle's color and position.
-func drawParticleCircle(p *particle.Particle) {
 	color := rl.Color{
 		R: uint8(p.Color.R * 255),
 		G: uint8(p.Color.G * 255),
 		B: uint8(p.Color.B * 255),
 		A: uint8(p.Color.A * 255),
 	}
-	rl.DrawCircle(int32(p.X), int32(p.Y), float32(p.Radius), color)
+
+	if p.Shape == particle.ShapeRectangle {
+		rl.DrawRectangle(int32(p.X), int32(p.Y), int32(p.Width), int32(p.Height), color)
+	} else {
+		rl.DrawCircle(int32(p.X), int32(p.Y), float32(p.Radius), color)
+	}
+	
+	physics.ApplyBoundaryConditions(p, screenWidth, screenHeight)
 }
+
+// drawParticleCircle is deprecated/merged into DrawParticle
+// func drawParticleCircle(p *particle.Particle) { ... }
 
 // DrawParticleInfo shows particle info (e.g., mass, velocity) when the mouse hovers over a particle.
 func DrawParticleInfo(particles []*particle.Particle) {
@@ -48,12 +52,21 @@ func DrawParticleInfo(particles []*particle.Particle) {
 
 	// Find the nearest particle
 	for _, p := range particles {
-		dx, dy := p.X-mouseX, p.Y-mouseY
-		distance := math.Sqrt(dx*dx + dy*dy)
-
-		if distance < p.Radius && distance < minDistance {
-			minDistance = distance
-			nearestParticle = p
+		var distance float64
+		if p.Shape == particle.ShapeCircle {
+			dx, dy := p.X-mouseX, p.Y-mouseY
+			distance = math.Sqrt(dx*dx + dy*dy)
+			if distance < p.Radius && distance < minDistance {
+				minDistance = distance
+				nearestParticle = p
+			}
+		} else {
+			// Simple rect hover check
+			if mouseX >= p.X && mouseX <= p.X+p.Width && mouseY >= p.Y && mouseY <= p.Y+p.Height {
+				distance = 0 // Inside
+				minDistance = 0
+				nearestParticle = p
+			}
 		}
 	}
 
@@ -100,9 +113,17 @@ func DrawUI(particles []*particle.Particle, simState *state.SimulationState) {
 
 	rl.DrawText(fmt.Sprintf("Mouse Mode (M): %s", simState.MouseMode.String()), 10, 120, 20, rl.RayWhite)
 	rl.DrawText(fmt.Sprintf("Attraction Strength ([/]): %.0f", simState.AttractionStrength), 10, 140, 20, rl.RayWhite)
+	
+	rl.DrawText(fmt.Sprintf("Spawn Type (T): %s", simState.SpawnType.String()), 10, 160, 20, rl.RayWhite)
+	movableStatus := "Static"
+	if simState.SpawnMovable {
+		movableStatus = "Movable"
+	}
+	rl.DrawText(fmt.Sprintf("Spawn Mode (B): %s", movableStatus), 10, 180, 20, rl.RayWhite)
+	rl.DrawText(fmt.Sprintf("Size (+/-): %.1f", simState.ParticleSize), 10, 200, 20, rl.RayWhite)
 
 	// Display instructions for controls
-	instructions := "Controls: [Space] Pause | [G] Gravity | [E] Electrostatics | [M] Mouse Mode | [Arrows] Gravity | [R] Reset"
+	instructions := "Controls: [Space] Pause | [G] Gravity | [E] Electrostatics | [M] Mouse Mode | [T] Type | [B] Movable | [+/-] Size"
 	rl.DrawText(instructions, 10, int32(screenHeight)-30, 20, rl.Gray)
 }
 

@@ -79,6 +79,30 @@ func handleSimulationInput(particles *[]*particle.Particle, simState *state.Simu
 		simState.AttractionStrength += 100.0
 	}
 
+	// Toggle Spawn Type with T
+	if rl.IsKeyPressed(rl.KeyT) {
+		if simState.SpawnType == state.SpawnTypeParticle {
+			simState.SpawnType = state.SpawnTypeWall
+		} else {
+			simState.SpawnType = state.SpawnTypeParticle
+		}
+	}
+
+	// Toggle Movable Spawning with B
+	if rl.IsKeyPressed(rl.KeyB) {
+		simState.SpawnMovable = !simState.SpawnMovable
+	}
+
+	// Adjust Size with + and - (KeyEqual and KeyMinus)
+	if rl.IsKeyDown(rl.KeyEqual) { // Plus
+		simState.ParticleSize += 0.5
+	}
+	if rl.IsKeyDown(rl.KeyMinus) { // Minus
+		if simState.ParticleSize > 1.0 {
+			simState.ParticleSize -= 0.5
+		}
+	}
+
 	mouseX := float64(rl.GetMouseX())
 	mouseY := float64(rl.GetMouseY())
 
@@ -86,17 +110,43 @@ func handleSimulationInput(particles *[]*particle.Particle, simState *state.Simu
 	if rl.IsMouseButtonDown(rl.MouseLeftButton) {
 		switch simState.MouseMode {
 		case state.MouseModeAdd:
-			if rl.IsMouseButtonPressed(rl.MouseLeftButton) { // Only add on press, not hold
-				newParticle := particle.NewParticle(
-					mouseX, mouseY,
-					0, 0, // Starting velocity
-					0, 0, // Starting acceleration
-					10.0, // Mass
-					10,   // Radius
-					particle.Color{R: 0.5, G: 0.7, B: 1, A: 1}, // Color
-					true,
-				)
-				*particles = append(*particles, newParticle)
+			if rl.IsMouseButtonPressed(rl.MouseLeftButton) { // Only add on press
+				if simState.SpawnType == state.SpawnTypeParticle {
+					// Mass proportional to area (radius^2)
+					// Let's say density is 1.0
+					mass := math.Pi * simState.ParticleSize * simState.ParticleSize * 0.1 // Scaled down a bit
+					if mass < 1.0 { mass = 1.0 }
+
+					newParticle := particle.NewParticle(
+						mouseX, mouseY,
+						0, 0, // Starting velocity
+						0, 0, // Starting acceleration
+						mass, 
+						simState.ParticleSize,   // Radius
+						particle.Color{R: 0.5, G: 0.7, B: 1, A: 1}, // Color
+						true, // Particles are always movable? Or should we allow static particles? Let's keep particles movable.
+					)
+					*particles = append(*particles, newParticle)
+				} else if simState.SpawnType == state.SpawnTypeWall {
+					// Spawn a wall
+					width := simState.ParticleSize * 5
+					height := simState.ParticleSize * 5
+					
+					// Mass proportional to area (width * height)
+					mass := width * height * 1.0 // Higher density for walls maybe?
+					if !simState.SpawnMovable {
+						mass = 100000.0 // Infinite-ish mass for static
+					}
+
+					newWall := particle.NewRectangleParticle(
+						mouseX, mouseY,
+						width, height,
+						mass,
+						particle.Color{R: 0.5, G: 0.5, B: 0.5, A: 1},
+						simState.SpawnMovable, 
+					)
+					*particles = append(*particles, newWall)
+				}
 			}
 		case state.MouseModeRemove:
 			if rl.IsMouseButtonPressed(rl.MouseLeftButton) { // Only remove on press
@@ -130,6 +180,11 @@ func removeParticleNear(particles []*particle.Particle, x, y, radius float64) []
 
 func applyMouseForce(particles []*particle.Particle, mouseX, mouseY, strength float64) {
 	for _, p := range particles {
+		// Only affect Circle particles
+		if p.Shape != particle.ShapeCircle {
+			continue
+		}
+
 		dx := mouseX - p.X
 		dy := mouseY - p.Y
 		distSq := dx*dx + dy*dy

@@ -31,6 +31,24 @@ const (
 	AppStateRunning
 )
 
+type SpawnType int
+
+const (
+	SpawnTypeParticle SpawnType = iota
+	SpawnTypeWall
+)
+
+func (s SpawnType) String() string {
+	switch s {
+	case SpawnTypeParticle:
+		return "Particle"
+	case SpawnTypeWall:
+		return "Wall"
+	default:
+		return "Unknown"
+	}
+}
+
 type SimulationState struct {
 	AppState             AppState
 	Paused               bool
@@ -40,4 +58,7 @@ type SimulationState struct {
 	MouseMode            MouseMode
 	AttractionStrength   float64
 	ParticleCount        int
+	SpawnType            SpawnType
+	ParticleSize         float64
+	SpawnMovable         bool
 }

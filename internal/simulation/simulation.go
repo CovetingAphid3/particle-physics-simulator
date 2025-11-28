@@ -33,6 +33,9 @@ func RunSimulation() {
 		MouseMode:            state.MouseModeAdd,
 		AttractionStrength:   5000.0,
 		ParticleCount:        200, // Default
+		SpawnType:            state.SpawnTypeParticle,
+		ParticleSize:         10.0,
+		SpawnMovable:         false,
 	}
 	var wg sync.WaitGroup
 	var particles []*particle.Particle
