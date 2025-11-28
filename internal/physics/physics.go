@@ -7,9 +7,9 @@ import (
 	"particle-physics-simulator/internal/particle"
 )
 
-func ApplyGravity(p *particle.Particle) {
+func ApplyGravity(p *particle.Particle, gravityStrength float64) {
 	if !p.IsGrounded {
-		p.Ay = constants.Gravity
+		p.Ay = gravityStrength
 	}
 }
 
@@ -39,9 +39,9 @@ func ApplyFriction(p *particle.Particle) {
 	}
 }
 
-func UpdateVelocity(p *particle.Particle, dt float64) {
+func UpdateVelocity(p *particle.Particle, dt, gravityStrength float64) {
 	if p.Movable {
-        ApplyGravity(p)
+        ApplyGravity(p, gravityStrength)
 		p.Vx += p.Ax * dt
 		p.Vy += p.Ay * dt
 	}

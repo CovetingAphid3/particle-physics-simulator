@@ -5,6 +5,7 @@ import (
 	"math"
 	"particle-physics-simulator/internal/particle"
 	"particle-physics-simulator/internal/physics"
+	"particle-physics-simulator/internal/state"
 
 	"github.com/gen2brain/raylib-go/raylib"
 )
@@ -66,11 +67,16 @@ func DrawParticleInfo(particles []*particle.Particle) {
 }
 
 
-func DrawUI(particles []*particle.Particle, paused bool) {
+func DrawUI(particles []*particle.Particle, simState *state.SimulationState) {
+	if simState.AppState == state.AppStateMenu {
+		DrawMenu(simState)
+		return
+	}
+
 	fps := rl.GetFPS()
 	particleCount := len(particles)
 	pauseStatus := "Running"
-	if paused {
+	if simState.Paused {
 		pauseStatus = "Paused"
 	}
 
@@ -79,9 +85,41 @@ func DrawUI(particles []*particle.Particle, paused bool) {
 	rl.DrawText(fmt.Sprintf("Particles: %d", particleCount), 10, 30, 20, rl.RayWhite)
 	rl.DrawText(fmt.Sprintf("Status: %s", pauseStatus), 10, 50, 20, rl.RayWhite)
 
+	// Display Simulation State
+	gravityStatus := "OFF"
+	if simState.GravityEnabled {
+		gravityStatus = fmt.Sprintf("ON (%.0f)", simState.GravityStrength)
+	}
+	rl.DrawText(fmt.Sprintf("Gravity (G): %s", gravityStatus), 10, 80, 20, rl.RayWhite)
+
+	electroStatus := "OFF"
+	if simState.ElectrostaticsEnabled {
+		electroStatus = "ON"
+	}
+	rl.DrawText(fmt.Sprintf("Electrostatics (E): %s", electroStatus), 10, 100, 20, rl.RayWhite)
+
+	rl.DrawText(fmt.Sprintf("Mouse Mode (M): %s", simState.MouseMode.String()), 10, 120, 20, rl.RayWhite)
+	rl.DrawText(fmt.Sprintf("Attraction Strength ([/]): %.0f", simState.AttractionStrength), 10, 140, 20, rl.RayWhite)
+
 	// Display instructions for controls
-	instructions := "Controls: [Space] Pause/Resume | [Left Click] Add Particle | [Right Click] Remove Particle"
-	rl.DrawText(instructions, 10, int32(screenHeight)-870, 15, rl.Gray)
+	instructions := "Controls: [Space] Pause | [G] Gravity | [E] Electrostatics | [M] Mouse Mode | [Arrows] Gravity | [R] Reset"
+	rl.DrawText(instructions, 10, int32(screenHeight)-30, 20, rl.Gray)
+}
+
+func DrawMenu(simState *state.SimulationState) {
+	rl.ClearBackground(rl.Black)
+	
+	title := "Particle Physics Simulator"
+	rl.DrawText(title, int32(screenWidth)/2 - 200, int32(screenHeight)/3, 40, rl.RayWhite)
+
+	instructions := "Use Up/Down arrows to adjust particle count"
+	rl.DrawText(instructions, int32(screenWidth)/2 - 200, int32(screenHeight)/2, 20, rl.Gray)
+
+	countText := fmt.Sprintf("Particle Count: %d", simState.ParticleCount)
+	rl.DrawText(countText, int32(screenWidth)/2 - 100, int32(screenHeight)/2 + 40, 30, rl.Yellow)
+
+	startText := "Press ENTER to Start"
+	rl.DrawText(startText, int32(screenWidth)/2 - 150, int32(screenHeight)/2 + 100, 30, rl.Green)
 }
 
 func CloseWindow() {
