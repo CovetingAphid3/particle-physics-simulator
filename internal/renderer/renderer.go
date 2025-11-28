@@ -18,6 +18,49 @@ const (
 	buttonSize    int     = 20 
 )
 
+var (
+	// UI Colors
+	colBackground = rl.Color{R: 20, G: 20, B: 30, A: 240}
+	colPanel      = rl.Color{R: 30, G: 30, B: 40, A: 200}
+	colAccent     = rl.Color{R: 0, G: 200, B: 255, A: 255} // Cyan
+	colText       = rl.Color{R: 220, G: 220, B: 220, A: 255}
+	colActive     = rl.Color{R: 0, G: 255, B: 100, A: 255} // Green
+	colDanger     = rl.Color{R: 255, G: 50, B: 50, A: 255} // Red
+)
+
+func DrawPanel(x, y, w, h int32, title string) {
+	rl.DrawRectangle(x, y, w, h, colPanel)
+	rl.DrawRectangleLines(x, y, w, h, colAccent)
+	if title != "" {
+		rl.DrawRectangle(x, y, w, 30, colAccent)
+		rl.DrawText(title, x+10, y+5, 20, rl.Black)
+	}
+}
+
+func DrawProgressBar(x, y, w, h int32, value, max float32, label string) {
+	rl.DrawText(label, x, y-20, 15, colText)
+	rl.DrawRectangle(x, y, w, h, rl.Black)
+	
+	fillW := int32((value / max) * float32(w))
+	if fillW > w { fillW = w }
+	if fillW < 0 { fillW = 0 }
+	
+	rl.DrawRectangle(x, y, fillW, h, colAccent)
+	rl.DrawRectangleLines(x, y, w, h, rl.Gray)
+}
+
+func DrawButton(x, y, w, h int32, text string, active bool) {
+	color := colPanel
+	textColor := colText
+	if active {
+		color = colActive
+		textColor = rl.Black
+	}
+	rl.DrawRectangle(x, y, w, h, color)
+	rl.DrawRectangleLines(x, y, w, h, colAccent)
+	rl.DrawText(text, x+10, y+5, 20, textColor)
+}
+
 func InitWindow() {
 	rl.InitWindow(int32(screenWidth), int32(screenHeight), "Particle Physics Simulator")
 	rl.SetTargetFPS(120) 
@@ -164,7 +207,7 @@ func DrawUI(particles []*particle.Particle, simState *state.SimulationState) {
 		return
 	}
 
-	// Draw Dragging Rectangle/Line
+	// Draw Dragging Visuals
 	if simState.IsDragging {
 		mouseX := int32(rl.GetMouseX())
 		mouseY := int32(rl.GetMouseY())
@@ -172,77 +215,116 @@ func DrawUI(particles []*particle.Particle, simState *state.SimulationState) {
 		startY := int32(simState.DragStart.Y)
 
 		if simState.SpawnType == state.SpawnTypeWall || simState.SpawnType == state.SpawnTypeBumper {
-			// Draw Rectangle
 			x := min(startX, mouseX)
 			y := min(startY, mouseY)
 			width := abs(mouseX - startX)
 			height := abs(mouseY - startY)
 			color := rl.Green
-			if simState.SpawnType == state.SpawnTypeBumper {
-				color = rl.Red
-			}
+			if simState.SpawnType == state.SpawnTypeBumper { color = rl.Red }
 			rl.DrawRectangleLines(x, y, width, height, color)
 		} else if simState.SpawnType == state.SpawnTypeSpring {
-			// Draw Line
 			rl.DrawLine(startX, startY, mouseX, mouseY, rl.Green)
 		}
 	}
 
-	fps := rl.GetFPS()
-	particleCount := len(particles)
-	pauseStatus := "Running"
-	if simState.Paused {
-		pauseStatus = "Paused"
-	}
-
-	// Display FPS, particle count, and status
-	rl.DrawText(fmt.Sprintf("FPS: %d", fps), 10, 10, 20, rl.RayWhite)
-	rl.DrawText(fmt.Sprintf("Particles: %d", particleCount), 10, 30, 20, rl.RayWhite)
-	rl.DrawText(fmt.Sprintf("Status: %s", pauseStatus), 10, 50, 20, rl.RayWhite)
-
-	// Display Simulation State
-	gravityStatus := "OFF"
-	if simState.GravityEnabled {
-		gravityStatus = fmt.Sprintf("ON (%.0f)", simState.GravityStrength)
-	}
-	rl.DrawText(fmt.Sprintf("Gravity (G): %s", gravityStatus), 10, 80, 20, rl.RayWhite)
-
-	electroStatus := "OFF"
-	if simState.ElectrostaticsEnabled {
-		electroStatus = "ON"
-	}
-	rl.DrawText(fmt.Sprintf("Electrostatics (E): %s", electroStatus), 10, 100, 20, rl.RayWhite)
-
-	rl.DrawText(fmt.Sprintf("Mouse Mode (M): %s", simState.MouseMode.String()), 10, 120, 20, rl.RayWhite)
-	rl.DrawText(fmt.Sprintf("Attraction Strength ([/]): %.0f", simState.AttractionStrength), 10, 140, 20, rl.RayWhite)
+	// --- HUD Layout ---
 	
-	rl.DrawText(fmt.Sprintf("Spawn Type (T): %s", simState.SpawnType.String()), 10, 160, 20, rl.RayWhite)
-	movableStatus := "Static"
-	if simState.SpawnMovable {
-		movableStatus = "Movable"
-	}
-	rl.DrawText(fmt.Sprintf("Spawn Mode (B): %s", movableStatus), 10, 180, 20, rl.RayWhite)
-	rl.DrawText(fmt.Sprintf("Size (+/-): %.1f", simState.ParticleSize), 10, 200, 20, rl.RayWhite)
+	// 1. Top Left Stats
+	DrawPanel(10, 10, 200, 80, "Stats")
+	rl.DrawText(fmt.Sprintf("FPS: %d", rl.GetFPS()), 20, 45, 20, colText)
+	rl.DrawText(fmt.Sprintf("Particles: %d", len(particles)), 20, 65, 20, colText)
 
-	// Display instructions for controls
-	instructions := "Controls: [Space] Pause | [G] Gravity | [E] Electrostatics | [M] Mouse Mode | [T] Type | [B] Movable | [+/-] Size"
-	rl.DrawText(instructions, 10, int32(screenHeight)-30, 20, rl.Gray)
+	// 2. Right Control Panel
+	panelW := int32(300)
+	panelX := int32(screenWidth) - panelW - 10
+	panelY := int32(40) // Below window buttons
+	
+	DrawPanel(panelX, panelY, panelW, 600, "Control Center")
+	
+	currentY := panelY + 40
+	padding := int32(10)
+	
+	// Section: Simulation
+	rl.DrawText("Simulation", panelX+padding, currentY, 20, colAccent)
+	currentY += 30
+	DrawButton(panelX+padding, currentY, 130, 30, "Pause (Spc)", simState.Paused)
+	DrawButton(panelX+150, currentY, 130, 30, "Reset (R)", false)
+	currentY += 40
+
+	// Section: Spawning
+	rl.DrawText("Spawn Tool (T)", panelX+padding, currentY, 20, colAccent)
+	currentY += 30
+	
+	// Spawn Type Buttons
+	types := []string{"Particle", "Wall", "Spring", "Bumper"}
+	for i, t := range types {
+		isActive := simState.SpawnType.String() == t
+		DrawButton(panelX+padding + int32(i%2)*140, currentY + int32(i/2)*40, 130, 30, t, isActive)
+	}
+	currentY += 90
+	
+	// Movable Toggle
+	DrawButton(panelX+padding, currentY, 280, 30, fmt.Sprintf("Movable (B): %v", simState.SpawnMovable), simState.SpawnMovable)
+	currentY += 50
+	
+	// Size Slider
+	DrawProgressBar(panelX+padding, currentY, 280, 20, float32(simState.ParticleSize), 50.0, fmt.Sprintf("Size (+/-): %.1f", simState.ParticleSize))
+	currentY += 50
+
+	// Section: Physics
+	rl.DrawText("Physics", panelX+padding, currentY, 20, colAccent)
+	currentY += 30
+	
+	DrawButton(panelX+padding, currentY, 130, 30, "Gravity (G)", simState.GravityEnabled)
+	DrawButton(panelX+150, currentY, 130, 30, "Electro (E)", simState.ElectrostaticsEnabled)
+	currentY += 50
+	
+	DrawProgressBar(panelX+padding, currentY, 280, 20, float32(simState.GravityStrength), 2000.0, fmt.Sprintf("Gravity Str (Arrows): %.0f", simState.GravityStrength))
+	currentY += 50
+
+	// Section: Mouse Interaction
+	rl.DrawText("Interaction", panelX+padding, currentY, 20, colAccent)
+	currentY += 30
+	DrawButton(panelX+padding, currentY, 280, 30, fmt.Sprintf("Mode (M): %s", simState.MouseMode.String()), true)
+	currentY += 50
+	DrawProgressBar(panelX+padding, currentY, 280, 20, float32(simState.AttractionStrength), 10000.0, fmt.Sprintf("Force Str ([/]): %.0f", simState.AttractionStrength))
+
+	// Bottom Help
+	rl.DrawText("Press keys to toggle options. Drag to create.", 10, int32(screenHeight)-30, 20, rl.Gray)
 }
 
 func DrawMenu(simState *state.SimulationState) {
-	rl.ClearBackground(rl.Black)
+	rl.ClearBackground(colBackground)
 	
-	title := "Particle Physics Simulator"
-	rl.DrawText(title, int32(screenWidth)/2 - 200, int32(screenHeight)/3, 40, rl.RayWhite)
+	centerX := int32(screenWidth) / 2
+	centerY := int32(screenHeight) / 2
+	
+	// Title Panel
+	DrawPanel(centerX-300, centerY-200, 600, 400, "")
+	
+	title := "PARTICLE SIMULATOR"
+	titleW := rl.MeasureText(title, 50)
+	rl.DrawText(title, centerX - titleW/2, centerY - 150, 50, colAccent)
 
-	instructions := "Use Up/Down arrows to adjust particle count"
-	rl.DrawText(instructions, int32(screenWidth)/2 - 200, int32(screenHeight)/2, 20, rl.Gray)
+	rl.DrawText("v2.0 - Physics Engine", centerX - 100, centerY - 90, 20, colText)
 
-	countText := fmt.Sprintf("Particle Count: %d", simState.ParticleCount)
-	rl.DrawText(countText, int32(screenWidth)/2 - 100, int32(screenHeight)/2 + 40, 30, rl.Yellow)
+	// Particle Count Control
+	rl.DrawText("Initial Particle Count", centerX - 100, centerY - 20, 20, colText)
+	
+	countStr := fmt.Sprintf("<  %d  >", simState.ParticleCount)
+	countW := rl.MeasureText(countStr, 40)
+	rl.DrawText(countStr, centerX - countW/2, centerY + 20, 40, colActive)
+	
+	rl.DrawText("Use Up/Down Arrows", centerX - 80, centerY + 70, 15, rl.Gray)
 
+	// Start Prompt
 	startText := "Press ENTER to Start"
-	rl.DrawText(startText, int32(screenWidth)/2 - 150, int32(screenHeight)/2 + 100, 30, rl.Green)
+	startW := rl.MeasureText(startText, 30)
+	
+	// Blinking effect
+	if int(rl.GetTime()*2)%2 == 0 {
+		rl.DrawText(startText, centerX - startW/2, centerY + 130, 30, colAccent)
+	}
 }
 
 func CloseWindow() {
