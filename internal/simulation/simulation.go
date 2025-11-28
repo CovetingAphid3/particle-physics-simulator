@@ -32,19 +32,20 @@ func RunSimulation() {
 		GravityStrength:      980.0,
 		MouseMode:            state.MouseModeAdd,
 		AttractionStrength:   5000.0,
-		ParticleCount:        200, // Default
+		ParticleCount:        10, // Default
 		SpawnType:            state.SpawnTypeParticle,
 		ParticleSize:         10.0,
 		SpawnMovable:         false,
 	}
 	var wg sync.WaitGroup
 	var particles []*particle.Particle
+	var springs []*particle.Spring
 
 	for !rl.WindowShouldClose() {
 		currentTime := time.Now()
 
 		// Handle user input
-		HandleUserInput(&particles, &simState)
+		HandleUserInput(&particles, &springs, &simState)
 
 		// Initialize particles if transitioning to running state
 		if simState.AppState == state.AppStateRunning && len(particles) == 0 {
@@ -56,6 +57,9 @@ func RunSimulation() {
 			if simState.ElectrostaticsEnabled {
 				physics.ApplyElectrostaticForces(particles)
 			}
+			
+			// Apply Spring Forces
+			physics.ApplySpringForces(springs)
 
 			// Parallelize particle updates
 			wg.Add(len(particles))
@@ -92,6 +96,7 @@ func RunSimulation() {
 		rl.ClearBackground(rl.Black)
 
 		if simState.AppState == state.AppStateRunning {
+			renderer.DrawSprings(springs)
 			for _, p := range particles {
 				renderer.DrawParticle(p)
 			}
@@ -152,8 +157,8 @@ func InitializeParticles(count int) []*particle.Particle {
 	}
 
 	// Always add the obstacle? Or maybe not if count is small? Let's keep it.
-	obstacle := particle.NewParticle(300, 300, 0.0, 0.0, 0.0, 0.0, 100.0, 50, particle.Color{R: 0.5, G: 0.5, B: 0.5, A: 1}, false)
-	particles = append(particles, obstacle)
+	// obstacle := particle.NewParticle(300, 300, 0.0, 0.0, 0.0, 0.0, 100.0, 50, particle.Color{R: 0.5, G: 0.5, B: 0.5, A: 1}, false)
+	// particles = append(particles, obstacle)
 
 	return particles
 }

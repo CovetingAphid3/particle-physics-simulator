@@ -12,13 +12,14 @@ func CheckCollision(p1, p2 *particle.Particle) bool {
 		distanceSq := dx*dx + dy*dy
 		radiusSum := p1.Radius + p2.Radius
 		return distanceSq < radiusSum*radiusSum
-	} else if p1.Shape == particle.ShapeRectangle && p2.Shape == particle.ShapeRectangle {
+	} else if (p1.Shape == particle.ShapeRectangle || p1.Shape == particle.ShapeBumper) && 
+              (p2.Shape == particle.ShapeRectangle || p2.Shape == particle.ShapeBumper) {
 		return p1.X < p2.X+p2.Width &&
 			p1.X+p1.Width > p2.X &&
 			p1.Y < p2.Y+p2.Height &&
 			p1.Y+p1.Height > p2.Y
 	} else {
-		// Circle-Rectangle
+		// Circle-Rectangle/Bumper
 		var circle, rect *particle.Particle
 		if p1.Shape == particle.ShapeCircle {
 			circle, rect = p1, p2
@@ -32,9 +33,6 @@ func CheckCollision(p1, p2 *particle.Particle) bool {
 // WillCollide checks if two particles will collide based on their velocities and predicted positions.
 func WillCollide(p1, p2 *particle.Particle, dt float64) bool {
 	// Simple prediction: move both and check overlap
-	// This is a bit expensive but accurate enough for now.
-	// We can optimize later if needed.
-	
 	p1NextX := p1.X + p1.Vx*dt
 	p1NextY := p1.Y + p1.Vy*dt
 	p2NextX := p2.X + p2.Vx*dt
@@ -71,16 +69,12 @@ func HandleCollision(p1, p2 *particle.Particle) {
 		dist = math.Sqrt(distSq)
 		nx = dx / dist
 		ny = dy / dist
-	} else if p1.Shape == particle.ShapeRectangle && p2.Shape == particle.ShapeRectangle {
-		// Rect-Rect collision normal is tricky, usually along the axis of least penetration
-		// For now, let's skip complex rect-rect physics or approximate it.
-		// Or just treat them as static walls mostly?
-		// Let's implement a simple AABB response if needed, but usually walls don't move.
-		// If both are movable rectangles, we need proper logic.
-		// Let's assume for now walls (rects) are static.
+	} else if (p1.Shape == particle.ShapeRectangle || p1.Shape == particle.ShapeBumper) && 
+              (p2.Shape == particle.ShapeRectangle || p2.Shape == particle.ShapeBumper) {
+		// Rect-Rect collision ignored for now
 		return 
 	} else {
-		// Circle-Rectangle
+		// Circle-Rectangle/Bumper
 		var circle, rect *particle.Particle
 		swapped := false
 		if p1.Shape == particle.ShapeCircle {
@@ -109,20 +103,27 @@ func HandleCollision(p1, p2 *particle.Particle) {
 		return
 	}
 
-	// Impulse
-	impulse := 2 * dotProduct / (p1.Mass + p2.Mass)
+	// Coefficient of Restitution
+	restitution := math.Max(p1.Bounciness, p2.Bounciness)
 
-	if p1.Movable && !p2.Movable {
-		p1.Vx -= impulse * p2.Mass * nx
-		p1.Vy -= impulse * p2.Mass * ny
-	} else if !p1.Movable && p2.Movable {
-		p2.Vx += impulse * p1.Mass * nx
-		p2.Vy += impulse * p1.Mass * ny
-	} else if p1.Movable && p2.Movable {
-		p1.Vx -= impulse * p2.Mass * nx
-		p1.Vy -= impulse * p2.Mass * ny
-		p2.Vx += impulse * p1.Mass * nx
-		p2.Vy += impulse * p1.Mass * ny
+	// Impulse
+	// impulse := (1 + e) * dotProduct / (1/m1 + 1/m2)
+	// If one is infinite mass (static), 1/m = 0.
+	
+	invMass1 := 1.0 / p1.Mass
+	if !p1.Movable { invMass1 = 0 }
+	invMass2 := 1.0 / p2.Mass
+	if !p2.Movable { invMass2 = 0 }
+
+	impulse := -(1 + restitution) * dotProduct / (invMass1 + invMass2)
+
+	if p1.Movable {
+		p1.Vx += impulse * invMass1 * nx
+		p1.Vy += impulse * invMass1 * ny
+	}
+	if p2.Movable {
+		p2.Vx -= impulse * invMass2 * nx
+		p2.Vy -= impulse * invMass2 * ny
 	}
 }
 

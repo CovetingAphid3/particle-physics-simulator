@@ -6,6 +6,7 @@ type ShapeType int
 const (
 	ShapeCircle ShapeType = iota
 	ShapeRectangle
+	ShapeBumper
 )
 
 type Particle struct {
@@ -14,13 +15,14 @@ type Particle struct {
 	Ax, Ay float64
 	Mass       float64
 	Radius     float64 // Used for Circle
-	Width, Height float64 // Used for Rectangle
+	Width, Height float64 // Used for Rectangle/Bumper
 	Shape      ShapeType
 	Color      Color
 	IsGrounded bool
 	Charge     float64
 	Fx, Fy float64
     Movable bool
+	Bounciness float64
 }
 
 type Color struct {
@@ -37,6 +39,7 @@ func NewParticle(x, y,  vx, vy, ax, ay, mass, radius float64, color Color, movab
 		Shape:  ShapeCircle,
 		Color:  color,
         Movable: movable,
+		Bounciness: 1.0, // Default elastic
 	}
 }
 
@@ -48,6 +51,19 @@ func NewRectangleParticle(x, y, width, height, mass float64, color Color, movabl
 		Shape:  ShapeRectangle,
 		Color:  color,
 		Movable: movable,
+		Bounciness: 1.0,
+	}
+}
+
+func NewBumperParticle(x, y, width, height float64, color Color) *Particle {
+	return &Particle{
+		X: x, Y: y,
+		Width: width, Height: height,
+		Mass:   100000.0, // Static
+		Shape:  ShapeBumper,
+		Color:  color,
+		Movable: false,
+		Bounciness: 1.5, // High bounciness
 	}
 }
 
@@ -63,5 +79,6 @@ func NewCoulombParticle(x, y,  vx, vy, ax, ay,  mass, radius float64, color Colo
         Charge: charge,  
         Fx: 0.0, Fy: 0.0, 
         Movable: movable,
+		Bounciness: 1.0,
     }
 }

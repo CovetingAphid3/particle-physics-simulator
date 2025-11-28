@@ -36,6 +36,8 @@ type SpawnType int
 const (
 	SpawnTypeParticle SpawnType = iota
 	SpawnTypeWall
+	SpawnTypeSpring
+	SpawnTypeBumper
 )
 
 func (s SpawnType) String() string {
@@ -44,6 +46,10 @@ func (s SpawnType) String() string {
 		return "Particle"
 	case SpawnTypeWall:
 		return "Wall"
+	case SpawnTypeSpring:
+		return "Spring"
+	case SpawnTypeBumper:
+		return "Bumper"
 	default:
 		return "Unknown"
 	}
@@ -61,4 +67,10 @@ type SimulationState struct {
 	SpawnType            SpawnType
 	ParticleSize         float64
 	SpawnMovable         bool
+	IsDragging           bool
+	DragStart            Vector2
+}
+
+type Vector2 struct {
+	X, Y float64
 }

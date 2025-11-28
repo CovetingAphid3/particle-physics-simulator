@@ -33,6 +33,31 @@ func DrawParticle(p *particle.Particle) {
 
 	if p.Shape == particle.ShapeRectangle {
 		rl.DrawRectangle(int32(p.X), int32(p.Y), int32(p.Width), int32(p.Height), color)
+	} else if p.Shape == particle.ShapeBumper {
+		// Draw background
+		rl.DrawRectangle(int32(p.X), int32(p.Y), int32(p.Width), int32(p.Height), color)
+		// Draw coil pattern
+		rl.DrawRectangleLines(int32(p.X), int32(p.Y), int32(p.Width), int32(p.Height), rl.White)
+		
+		// Draw sine wave or zigzag inside
+		startX := int32(p.X)
+		startY := int32(p.Y) + int32(p.Height)/2
+		endX := int32(p.X + p.Width)
+		
+		prevX := startX
+		prevY := startY
+		
+		step := 5
+		for x := startX; x <= endX; x += int32(step) {
+			t := float64(x - startX) * 0.2
+			yOffset := math.Sin(t) * (p.Height * 0.4)
+			currY := startY + int32(yOffset)
+			
+			rl.DrawLine(prevX, prevY, x, currY, rl.White)
+			prevX = x
+			prevY = currY
+		}
+
 	} else {
 		rl.DrawCircle(int32(p.X), int32(p.Y), float32(p.Radius), color)
 	}
@@ -80,10 +105,87 @@ func DrawParticleInfo(particles []*particle.Particle) {
 }
 
 
+func DrawSprings(springs []*particle.Spring) {
+	for _, s := range springs {
+		start := rl.Vector2{X: float32(s.P1.X), Y: float32(s.P1.Y)}
+		end := rl.Vector2{X: float32(s.P2.X), Y: float32(s.P2.Y)}
+		
+		// Calculate direction and length
+		diff := rl.Vector2Subtract(end, start)
+		length := rl.Vector2Length(diff)
+		
+		if length == 0 {
+			continue
+		}
+
+		// Normalize direction
+		dir := rl.Vector2Scale(diff, 1.0/length)
+		// Perpendicular vector for zigzag
+		perp := rl.Vector2{X: -dir.Y, Y: dir.X}
+
+		// Zigzag parameters
+		segments := int(length / 10.0) // One segment every 10 pixels
+		if segments < 2 {
+			segments = 2
+		}
+		width := float32(5.0) // Width of the zigzag
+
+		// Draw zigzag
+		prevPoint := start
+		for i := 1; i <= segments; i++ {
+			t := float32(i) / float32(segments)
+			currentBase := rl.Vector2Add(start, rl.Vector2Scale(diff, t))
+			
+			offset := float32(0.0)
+			if i < segments { // Don't offset the last point (it should be exactly at 'end')
+				if i%2 == 0 {
+					offset = width
+				} else {
+					offset = -width
+				}
+			}
+			
+			currentPoint := rl.Vector2Add(currentBase, rl.Vector2Scale(perp, offset))
+			
+			// If it's the last segment, connect to end exactly
+			if i == segments {
+				currentPoint = end
+			}
+
+			rl.DrawLineEx(prevPoint, currentPoint, 2.0, rl.White)
+			prevPoint = currentPoint
+		}
+	}
+}
+
 func DrawUI(particles []*particle.Particle, simState *state.SimulationState) {
 	if simState.AppState == state.AppStateMenu {
 		DrawMenu(simState)
 		return
+	}
+
+	// Draw Dragging Rectangle/Line
+	if simState.IsDragging {
+		mouseX := int32(rl.GetMouseX())
+		mouseY := int32(rl.GetMouseY())
+		startX := int32(simState.DragStart.X)
+		startY := int32(simState.DragStart.Y)
+
+		if simState.SpawnType == state.SpawnTypeWall || simState.SpawnType == state.SpawnTypeBumper {
+			// Draw Rectangle
+			x := min(startX, mouseX)
+			y := min(startY, mouseY)
+			width := abs(mouseX - startX)
+			height := abs(mouseY - startY)
+			color := rl.Green
+			if simState.SpawnType == state.SpawnTypeBumper {
+				color = rl.Red
+			}
+			rl.DrawRectangleLines(x, y, width, height, color)
+		} else if simState.SpawnType == state.SpawnTypeSpring {
+			// Draw Line
+			rl.DrawLine(startX, startY, mouseX, mouseY, rl.Green)
+		}
 	}
 
 	fps := rl.GetFPS()
@@ -188,3 +290,16 @@ func DrawWindowButtons() {
 	}
 }
 
+func min(a, b int32) int32 {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+func abs(a int32) int32 {
+	if a < 0 {
+		return -a
+	}
+	return a
+}
