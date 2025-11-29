@@ -131,7 +131,7 @@ func InitializeParticles(count int) []*particle.Particle {
 	// Original had 100 normal (charged) + 100 magnetic (charged).
 	// Let's just make them all charged for simplicity and variety.
 	
-	for i := 0; i < count; i++ {
+	for i := range count {
 		x := float64(i % 500)
 		y := float64((i * 100) % 500)
 		velocityX := math.Sin(float64(i)*0.1) * 100
